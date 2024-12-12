@@ -5,7 +5,7 @@ IP-CIDR,104.236.69.0/24,no-resolve
 
 #ImmortalWrt
 DOMAIN-SUFFIX,mirrors.vsean.net
-
+DOMAIN-SUFFIX,kunming.us.kg
 #proxmox
 DOMAIN-SUFFIX,proxmox.com
 
