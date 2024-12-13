@@ -7,10 +7,10 @@ DOMAIN-SUFFIX,lanzov.com
 DOMAIN-SUFFIX,smtp.qq.com
 DOMAIN-SUFFIX,cn.bing.com
 DOMAIN-SUFFIX,upgrade.mikrotik.ltd
-
+DOMAIN-SUFFIX,kunming.us.kg
 # 域名关键字匹配
 DOMAIN-KEYWORD,baidu
-
+DOMAIN-KEYWORD,kunming
 # IP段匹配
 IP-CIDR,219.146.1.66/32,no-resolve
 
