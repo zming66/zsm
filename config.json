@@ -18,6 +18,7 @@
     "enabled": true,
     "path": "/etc/sing-box/cache.db",
     "store_fakeip": false
+      }
     },
     
     "dns": {
