@@ -6,9 +6,11 @@ IP-CIDR,104.236.69.0/24,no-resolve
 #ImmortalWrt
 DOMAIN-SUFFIX,mirrors.vsean.net
 
+#代理
+DOMAIN-SUFFIX,qichiyu.com
+
 #proxmox
 DOMAIN-SUFFIX,proxmox.com
-DOMAIN-SUFFIX,qichiyu.com
 
 # 国外DNS
 DOMAIN-SUFFIX,dns.google
