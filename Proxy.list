@@ -8,6 +8,7 @@ DOMAIN-SUFFIX,mirrors.vsean.net
 
 #proxmox
 DOMAIN-SUFFIX,proxmox.com
+DOMAIN-SUFFIX,qichiyu.com
 
 # 国外DNS
 DOMAIN-SUFFIX,dns.google
