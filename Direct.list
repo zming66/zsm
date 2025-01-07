@@ -8,6 +8,7 @@ DOMAIN-SUFFIX,smtp.qq.com
 DOMAIN-SUFFIX,cn.bing.com
 DOMAIN-SUFFIX,upgrade.mikrotik.ltd
 DOMAIN-SUFFIX,kunming.us.kg
+DOMAIN-SUFFIX,apple.com
 # 域名关键字匹配
 DOMAIN-KEYWORD,baidu
 DOMAIN-KEYWORD,kunming
