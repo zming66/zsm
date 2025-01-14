@@ -27,7 +27,7 @@
    "servers": 
    [
      {"tag": "dns_direct", "address": "10.10.10.1", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🎯 全球直连"},
-     {"tag": "fakeip", "address": "fakeip", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
+     {"tag": "fakeip", "address": "fakeip"}
    ],
    "rules": 
    [
