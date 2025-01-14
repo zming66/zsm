@@ -26,7 +26,7 @@
    "fakeip": {"enabled": true, "inet4_range": "198.18.0.0/15"},
    "servers": 
    [
-     {"tag": "dns_direct", "address": "10.10.10.1", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🎯 全球直连"},
+     {"tag": "dns_direct", "address": "223.5.5.5", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🎯 全球直连"},
      {"tag": "fakeip", "address": "fakeip"}
    ],
    "rules": 
@@ -34,10 +34,16 @@
      {"outbound": "any", "server": "dns_direct", "disable_cache": true},
      {"clash_mode": "Direct", "server": "dns_direct"},
      {"clash_mode": "Global", "server": "fakeip"},
-     {"rule_set": "geosite-cn", "server": "dns_direct"},
-     {"rule_set": "geosite-geolocation-!cn", "server": "fakeip"}
+     {"rule_set": "geosite-cn", "action": "route","server": "dns_direct"},
+     {
+      "query_type": [
+        "A",
+        "AAAA"
+      ],
+      "server": "fakeip"
+    }
    ],
-   "final": "fakeip",
+   "final": "dns_direct",
    "strategy": "ipv4_only"
 },
 
