@@ -23,6 +23,7 @@
 
  "dns": 
  {
+   "fakeip": {"enabled": true, "inet4_range": "198.18.0.0/15"},
    "servers": 
    [
      {"tag": "dns_direct", "address": "10.10.10.1", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🎯 全球直连"},
