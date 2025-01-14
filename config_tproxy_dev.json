@@ -27,17 +27,17 @@
    "servers": 
    [
      {"tag": "dns_direct", "address": "10.10.10.1", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🎯 全球直连"},
-     {"tag": "dns_proxy", "address": "tls://8.8.8.8", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
+     {"tag": "fakeip", "address": "fakeip", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
    ],
    "rules": 
    [
      {"outbound": "any", "server": "dns_direct", "disable_cache": true},
      {"clash_mode": "Direct", "server": "dns_direct"},
-     {"clash_mode": "Global", "server": "dns_proxy"},
+     {"clash_mode": "Global", "server": "fakeip"},
      {"rule_set": "geosite-cn", "server": "dns_direct"},
-     {"rule_set": "geosite-geolocation-!cn", "server": "dns_proxy"}
+     {"rule_set": "geosite-geolocation-!cn", "server": "fakeip"}
    ],
-   "final": "dns_proxy",
+   "final": "fakeip",
    "strategy": "ipv4_only"
 },
 
