@@ -22,19 +22,18 @@
   },
 
  "dns": {
-  "fakeip": {"enabled": true, "inet4_range": "198.18.0.0/15"},
+  "fakeip": {"enabled": true, "inet4_range": "198.18.0.0/15", "inet6_range": "fc00::/18"},
    "servers": 
    [
-     {"tag": "local", "address": "10.10.10.1", "detour": "🎯 全球直连"},
-     {"tag": "google", "address": "tls://8.8.8.8", "detour": "🚀 节点选择"},
+     {"tag": "dns_direct", "address": "10.10.10.1", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🎯 全球直连"},
      {"tag": "fakeip", "address": "fakeip"}
    ],
    "rules": 
    [
-     {"outbound": "any", "server": "local", "disable_cache": true},
-     {"clash_mode": "Direct", "server": "local"},
+     {"outbound": "any", "server": "dns_direct", "disable_cache": true},
+     {"clash_mode": "Direct", "server": "dns_direct"},
      {"clash_mode": "Global", "server": "fakeip"},
-     {"rule_set": "geosite-cn", "action": "route","server": "local"},
+     {"rule_set": "geosite-cn", "action": "route","server": "dns_direct"},
      {
       "query_type": [
         "A",
@@ -43,7 +42,7 @@
       "server": "fakeip"
     }
    ],
-   "final": "local",
+   "final": "dns_direct",
    "strategy": "ipv4_only"
   },
 
