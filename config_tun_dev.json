@@ -30,7 +30,7 @@
       {
         "tag": "local",
         "address": "10.10.10.1",
-        "detour": "direct"
+        "detour": "🎯 全球直连"
       },
       {
         "tag": "remote",
