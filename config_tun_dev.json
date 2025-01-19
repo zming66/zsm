@@ -126,8 +126,8 @@
       ],
       
       "rule_set": [
-        { "tag": "direct", "type": "remote", "format": "source", "update_interval": "1d", "url": "https://raw.githubusercontent.com/zming66/zsm/refs/heads/main/Direct.list", "download_detour": "🚀 节点选择" },
-        { "tag": "proxylite", "type": "remote", "format": "source", "update_interval": "1d", "url": "https://raw.githubusercontent.com/zming66/zsm/refs/heads/main/Proxy.list", "download_detour": "🚀 节点选择" },
+        { "tag": "direct", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/zming66/sing-box-geosite/refs/heads/main/rule/Direct.srs", "download_detour": "🚀 节点选择" },
+        { "tag": "proxylite", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/zming66/sing-box-geosite/refs/heads/main/rule/Proxy.srs", "download_detour": "🚀 节点选择" },
         { "tag": "geosite-chat", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ai-chat-!cn.srs", "download_detour": "🚀 节点选择" },
         { "tag": "geosite-youtube", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/youtube.srs", "download_detour": "🚀 节点选择" },
         { "tag": "geosite-google", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/google.srs", "download_detour": "🚀 节点选择" },
