@@ -57,6 +57,9 @@ DOMAIN-SUFFIX,91porn.com
 DOMAIN-SUFFIX,18comic.vip
 DOMAIN-SUFFIX,pornhub.com
 DOMAIN-SUFFIX,browserleaks.com
+DOMAIN-SUFFIX,docker.com
+DOMAIN-SUFFIX,compose-spec.io
+DOMAIN-SUFFIX,docker.io
 
 
 IP-CIDR,8.8.8.8/32,no-resolve
