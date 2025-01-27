@@ -9,6 +9,7 @@ DOMAIN-SUFFIX,cn.bing.com
 DOMAIN-SUFFIX,upgrade.mikrotik.ltd
 DOMAIN-SUFFIX,apple.com
 DOMAIN-SUFFIX,icloud.com
+DOMAIN-SUFFIX,kunming.us.kg
 
 # 域名关键字匹配
 #DOMAIN-KEYWORD,baidu
