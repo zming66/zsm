@@ -30,12 +30,13 @@
    ],
    "rules": 
    [
-     {"outbound": "any", "server": "dns_direct", "disable_cache": true},
+     {"outbound": "any", "server": "dns_direct", "disable_cache": false},
      {"clash_mode": "Direct", "server": "dns_direct"},
      {"clash_mode": "Global", "server": "dns_proxy"},
      {"rule_set": "geosite-cn", "action": "route","server": "dns_direct"},
      {"rule_set": "geosite-geolocation-!cn", "server": "dns_proxy"}
    ],
+   "cache_capacity": 2048,
    "final": "dns_proxy",
    "strategy": "prefer_ipv4"
 },
