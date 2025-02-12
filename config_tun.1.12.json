@@ -25,8 +25,8 @@
    {
      "servers": 
      [
-       {"tag": "dns_direct", {"type": "udp","server": "1.1.1.1"} "detour": "🎯 全球直连"},
-       {"tag": "dns_proxy", {"type": "h3","server": "8.8.8.8/dns-query"} "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
+       {"tag": "dns_direct", "type": "udp","server": "1.1.1.1","detour": "🎯 全球直连"},
+       {"tag": "dns_proxy", "type": "h3","server": "8.8.8.8/dns-query","address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
      ],
      "rules": 
      [
