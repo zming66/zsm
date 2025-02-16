@@ -21,15 +21,12 @@
       }
     },
   
-   "dns": 
-   {
-     "servers": 
-     [
-       {"tag": "dns_direct", "type": "udp","server": "10.10.10.1","detour": "🎯 全球直连"},
-       {"tag": "dns_proxy", "type": "h3","server": "8.8.8.8/dns-query","address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
+   "dns": {
+     "servers": [
+       {"type": "udp", "tag": "dns_direct", "server": "10.10.10.1","detour": "🎯 全球直连"},
+       {"type": "h3", "tag": "dns_proxy", "server": "8.8.8.8/dns-query","address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
      ],
-     "rules": 
-     [
+     "rules": [
        {"outbound": "any", "server": "dns_direct", "disable_cache": false},
        {"clash_mode": "Direct", "server": "dns_direct"},
        {"clash_mode": "Global", "server": "dns_proxy"},
@@ -105,11 +102,14 @@
       ],
       
       "route": {
+            "default_domain_resolver": {"server": "dns_direct"},
             "auto_detect_interface": true,
             "final": "🐠 漏网之鱼",
         "rules": [
           {"action": "sniff"},
           {"protocol": "dns", "action": "hijack-dns"},
+          {"protocol": "quic","action": "reject"},
+          {"ip_is_private": true,"outbound": "direct"},
           { "clash_mode": "direct", "outbound": "🎯 全球直连" },
           { "clash_mode": "global", "outbound": "GLOBAL" },
           { "domain": ["clash.razord.top", "yacd.metacubex.one", "yacd.haishan.me", "d.metacubex.one"], "outbound": "🎯 全球直连" },
