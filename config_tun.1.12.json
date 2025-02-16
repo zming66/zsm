@@ -23,8 +23,8 @@
   
    "dns": {
      "servers": [
-       {"type": "udp", "tag": "dns_direct", "server": "10.10.10.1","detour": "🎯 全球直连"},
-       {"type": "h3", "tag": "dns_proxy", "server": "8.8.8.8/dns-query", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
+       {"type": "udp", "tag": "dns_direct", "server": "10.10.10.1", "server_port": 53, "detour": "🎯 全球直连"},
+       {"type": "h3", "tag": "dns_proxy", "server": "8.8.8.8/dns-query", "server_port": 443, "domain_strategy": "ipv4_only", "detour": "🚀 节点选择"}
      ],
      "rules": [
        {"outbound": "any", "server": "dns_direct", "disable_cache": false},
