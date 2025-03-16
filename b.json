@@ -87,49 +87,25 @@
             "invert": true
           },
           {
-            "query_type": [
-              "A",
-              "AAAA"
-            ]
-          }
-        ]
-      },
-      {
-        "action": "route",
-        "server": "Local-DNS",
-        "clash_mode": "direct"
-      },
-      {
-        "action": "route",
-        "server": "Remote-DNS",
-        "clash_mode": "global"
-      },
-      {
-        "action": "route",
-        "server": "Local-DNS",
-        "rule_set": [
-          "geosite-cn"
-        ]
-      },
-      {
-        "action": "route",
-        "server": "Remote-DNS",
-        "rule_set": [
-          "geosite-geolocation-!cn"
-        ]
-      }
-    ],
-    "fakeip": {
-      "enabled": true,
-      "inet4_range": "198.18.0.0/15",
-      "inet6_range": "fc00::/18"
-    },
-    "disable_cache": false,
-    "disable_expire": false,
-    "independent_cache": false,
-    "final": "Local-DNS",
-    "strategy": "prefer_ipv4"
-  },
+"dns": 
+ {
+   "servers": 
+   [
+     {"tag": "dns_direct", "address": "10.10.10.1", "detour": "🎯 全球直连"},
+     {"tag": "dns_proxy", "address": "tls://8.8.8.8", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
+   ],
+   "rules": 
+   [
+     {"outbound": "any", "server": "dns_direct", "disable_cache": false},
+     {"clash_mode": "Direct", "server": "dns_direct"},
+     {"clash_mode": "Global", "server": "dns_proxy"},
+     {"rule_set": "geosite-cn", "action": "route","server": "dns_direct"},
+     {"rule_set": "geosite-geolocation-!cn", "server": "dns_proxy"}
+   ],
+   "cache_capacity": 2048,
+   "final": "dns_proxy",
+   "strategy": "prefer_ipv4"
+},
   
   "inbounds": [
     {
