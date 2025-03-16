@@ -27,66 +27,7 @@
       "rdrc_timeout": "7d"
     }
   },
-  
-  "dns": {
-    "servers": [
-      {
-        "tag": "Local-DNS",
-        "address": "https://223.5.5.5/dns-query",
-        "address_resolver": "Local-DNS-Resolver",
-        "detour": "🎯 全球直连"
-      },
-      {
-        "tag": "Local-DNS-Resolver",
-        "address": "223.5.5.5",
-        "detour": "🎯 全球直连"
-      },
-      {
-        "tag": "Remote-DNS",
-        "address": "tls://8.8.8.8",
-        "address_resolver": "Remote-DNS-Resolver",
-        "detour": "🚀 节点选择",
-        "strategy": "ipv4_only"
-      },
-      {
-        "tag": "Remote-DNS-Resolver",
-        "address": "8.8.8.8",
-        "detour": "🚀 节点选择",
-        "strategy": "ipv4_only"
-      },
-      {
-        "tag": "FakeIP-DNS",
-        "address": "fakeip"
-      }
-    ],
-    "rules": [
-      {
-        "action": "route",
-        "server": "Local-DNS",
-        "outbound": "any"
-      },
-      {
-        "action": "route",
-        "server": "FakeIP-DNS",
-        "type": "logical",
-        "mode": "and",
-        "rules": [
-          {
-            "domain_suffix": [
-              ".lan",
-              ".localdomain",
-              ".example",
-              ".invalid",
-              ".localhost",
-              ".test",
-              ".local",
-              ".home.arpa",
-              ".msftconnecttest.com",
-              ".msftncsi.com"
-            ],
-            "invert": true
-          },
-          {
+
 "dns": 
  {
    "servers": 
