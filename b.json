@@ -31,11 +31,11 @@
    "rules": 
    [
      {
-        "clash_mode": "🎯 全球直连",
+        "clash_mode": "direct",
         "server": "local"
       },
       {
-        "clash_mode": "GLOBAL",
+        "clash_mode": "global",
         "server": "google"
       },
       {
