@@ -1,8 +1,7 @@
 {
   "log": {
-    "disabled": false,
-    "level": "error",
-    "timestamp": false
+    "level": "info",
+    "timestamp": true
   },
   "experimental": {
     "clash_api": {
@@ -19,18 +18,29 @@
     "store_rdrc": true
     }
   },
-
-"dns": 
- {
-   "servers": 
-   [
-     {"tag": "local", "type": "udp", "server": "223.5.5.5", "detour": "direct"},
-     {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "Proxy"},
-     {"tag": "fakeip","type": "fakeip","inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
-   ],
-   "rules": 
-   [
-     {
+  "dns": {
+    "servers": [
+      {
+        "tag": "google",
+        "type": "tls",
+        "server": "8.8.8.8",
+        "detour": "Proxy"
+      },
+      {
+        "tag": "local",
+        "type": "https",
+        "server": "223.5.5.5",
+        "detour": "direct"
+      },
+      {
+        "tag": "fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
+      }
+    ],
+    "rules": [
+      {
         "clash_mode": "direct",
         "server": "local"
       },
@@ -63,7 +73,7 @@
           }
         ],
         "server": "google",
-        "client_subnet": "203.80.96.10/24"
+        "client_subnet": "114.114.114.114/24"
       },
       {
         "query_type": [
@@ -76,7 +86,6 @@
     "independent_cache": true,
     "strategy": "prefer_ipv4"
   },
-  
   "inbounds": [
     {
       "tag": "tun-in",
@@ -85,7 +94,7 @@
         "172.19.0.0/30",
         "fdfe:dcba:9876::0/126"
       ],
-      "stack": "gvisor",
+      "stack": "system",
       "auto_route": true,
       "strict_route": true,
       "platform": {
