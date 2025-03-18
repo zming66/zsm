@@ -10,7 +10,7 @@
       "external_controller": "127.0.0.1:9090",
       "external_ui": "",
       "external_ui_download_url": "https://ghproxy.cn/github.com/MetaCubeX/metacubexd/archive/gh-pages.zip",
-      "external_ui_download_detour": "🚀 节点选择",
+      "external_ui_download_detour": "🎯 全球直连",
       "secret": "zsming",
       "default_mode": "rule",
       "access_control_allow_origin": [
@@ -32,21 +32,58 @@
  {
    "servers": 
    [
-     {"tag": "dns_direct", "address": "223.5.5.5", "detour": "🎯 全球直连"},
-     {"tag": "dns_proxy", "address": "tls://8.8.8.8", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"}
+     {"tag": "local", "type": "udp", "server": "223.5.5.5", "detour": "🎯 全球直连"},
+     {"tag": "google", "type": "tls", "server": "8.8.8.8", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"},
+     {"tag": "fakeip","type": "fakeip","inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
    ],
    "rules": 
    [
-     {"outbound": "any", "server": "dns_direct", "disable_cache": false},
-     {"clash_mode": "Direct", "server": "dns_direct"},
-     {"clash_mode": "Global", "server": "dns_proxy"},
-     {"rule_set": "geosite-cn", "action": "route","server": "dns_direct"},
-     {"rule_set": "geosite-geolocation-!cn", "server": "dns_proxy"}
-   ],
-   "cache_capacity": 2048,
-   "final": "dns_proxy",
-   "strategy": "prefer_ipv4"
-},
+     {
+        "clash_mode": "🎯 全球直连",
+        "server": "local"
+      },
+      {
+        "clash_mode": "GLOBAL",
+        "server": "google"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "rule_set": "geosite-cn",
+        "server": "fakeip"
+      },
+      {
+        "rule_set": "geosite-cn",
+        "server": "local"
+      },
+      {
+        "type": "logical",
+        "mode": "and",
+        "rules": [
+          {
+            "rule_set": "geosite-geolocation-!cn",
+            "invert": true
+          },
+          {
+            "rule_set": "geoip-cn"
+          }
+        ],
+        "server": "google",
+        "client_subnet": "114.114.114.114/24"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "server": "fakeip"
+      }
+    ],
+    "independent_cache": true,
+    "strategy": "prefer_ipv4"
+  },
   
   "inbounds": [
     {
@@ -92,7 +129,7 @@
       { "tag": "📲 Telegram", "type": "selector", "outbounds": ["🚀 节点选择", "♻️ 自动选择", "🇭🇰 香港自动", "🇹🇼 台湾自动", "🇸🇬 新加坡自动", "🇯🇵 日本自动", "🇲🇾 马来西亚自动", "🇺🇲 美国自动", "🐸 手动切换", "🎯 全球直连"] },
       { "tag": "🍏 Apple", "type": "selector", "outbounds": ["🚀 节点选择", "♻️ 自动选择", "🇭🇰 香港自动", "🇹🇼 台湾自动", "🇸🇬 新加坡自动", "🇯🇵 日本自动", "🇲🇾 马来西亚自动", "🇺🇲 美国自动", "🐸 手动切换", "🎯 全球直连"] },
       { "tag": "🐠 漏网之鱼", "type": "selector", "outbounds": ["🚀 节点选择", "🇭🇰 香港自动", "🇹🇼 台湾自动", "🇸🇬 新加坡自动", "🇯🇵 日本自动", "🇲🇾 马来西亚自动", "🇺🇲 美国自动", "🐸 手动切换", "🎯 全球直连"] },
-      { "tag": "🐸 手动切换", "type": "selector", "outbounds": ["{all}"]},
+      { "tag": "🐸 手动切换", "type": "selector", "outbounds": ["{all}"], "filter": [{ "action": "exclude", "keywords": ["网站|地址|剩余|过期|时间|有效"] }] }, 
       { "tag": "🇭🇰 香港节点", "type": "selector", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇭🇰|HK|hk|香港|港|HongKong"] }] },
       { "tag": "🇹🇼 台湾节点", "type": "selector", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇹🇼|TW|台湾|TaiWang"] }] },
       { "tag": "🇸🇬 新加坡节点", "type": "selector", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇸🇬|新加坡|SG|Singapore"] }] },
@@ -106,15 +143,16 @@
       { "tag": "🇲🇾 马来西亚自动", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇲🇾|马来西亚|MY|M|Malaysia"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
       { "tag": "🇺🇲 美国自动", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇺🇸|US|us|美国|美|United States"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
       { "tag": "♻️ 自动选择", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "exclude", "keywords": ["网站|地址|剩余|过期|时间|有效"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
-      { "tag": "GLOBAL", "type": "selector", "outbounds": ["{all}"]},
+      { "tag": "GLOBAL", "type": "selector", "outbounds": ["{all}"], "filter": [{ "action": "exclude", "keywords": ["网站|地址|剩余|过期|时间|有效"] }] },
       { "tag": "🎯 全球直连", "type": "direct" }
     ],
   "route": {
+          "default_domain_resolver": {"server": "local"},
           "auto_detect_interface": true,
           "final": "🐠 漏网之鱼",
       "rules": [
-        {"action": "sniff", "inbound": "tun-in"},
-        {"action": "hijack-dns", "protocol": "dns"},
+        {"inbound": ["tun-in", "mixed-in"],"action": "sniff"},
+        {"type": "logical","mode": "or","rules":[{"port":53},{"protocol": "dns"}],"action": "hijack-dns"},
         {"action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
         {"action": "route", "clash_mode": "global", "outbound": "GLOBAL" },
         {"action": "reject", "protocol": "quic"},
