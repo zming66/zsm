@@ -8,7 +8,7 @@
     "clash_api": {
       "external_controller": "0.0.0.0:9090",
       "external_ui": "ui",
-      "secret": "",
+      "secret": "zsming",
       "external_ui_download_url": "https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
       "external_ui_download_detour": "🎯 全球直连",
       "default_mode": "rule"
@@ -24,7 +24,7 @@
  {
    "servers": 
    [
-     {"tag": "local", "type": "udp", "server": "223.5.5.5", "detour": "🎯 全球直连"},
+     {"tag": "local", "type": "udp", "server": "10.10.10.1", "detour": "🎯 全球直连"},
      {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"},
      {"tag": "fakeip","type": "fakeip","inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
    ],
