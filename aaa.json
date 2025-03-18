@@ -10,7 +10,7 @@
       "external_ui": "ui",
       "secret": "",
       "external_ui_download_url": "https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
-      "external_ui_download_detour": "direct",
+      "external_ui_download_detour": "🎯 全球直连",
       "default_mode": "rule"
     },
   "cache_file": {
@@ -24,7 +24,7 @@
  {
    "servers": 
    [
-     {"tag": "local", "type": "udp", "server": "223.5.5.5", "detour": "direct"},
+     {"tag": "local", "type": "udp", "server": "223.5.5.5", "detour": "🎯 全球直连"},
      {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "Proxy"},
      {"tag": "fakeip","type": "fakeip","inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
    ],
@@ -137,7 +137,7 @@
       { "tag": "🇺🇲 美国自动", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇺🇸|US|us|美国|美|United States"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
       { "tag": "♻️ 自动选择", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "exclude", "keywords": ["网站|地址|剩余|过期|时间|有效"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
       { "tag": "GLOBAL", "type": "selector", "outbounds": ["{all}"], "filter": [{ "action": "exclude", "keywords": ["网站|地址|剩余|过期|时间|有效"] }] },
-      { "tag": "direct", "type": "direct" }
+      { "tag": "🎯 全球直连", "type": "direct" }
     ],
   "route": {
           "default_domain_resolver": {"server": "local"},
@@ -176,7 +176,7 @@
       "rule_set": [
         { "tag": "direct", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/zming66/sing-box-geosite/refs/heads/main/rule/Direct.srs", "download_detour": "Proxy" },
         { "tag": "proxylite", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/zming66/sing-box-geosite/refs/heads/main/rule/Proxy.srs", "download_detour": "Proxy" },
-        { "tag": "geosite-category-ads-all","type": "remote","format": "binary", "update_interval": "1d", "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs","download_detour": "direct"},
+        { "tag": "geosite-category-ads-all","type": "remote","format": "binary", "update_interval": "1d", "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs","download_detour": "🎯 全球直连"},
         { "tag": "bilibili", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/bilibili.srs", "download_detour": "Proxy" },
         { "tag": "steam", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/steam.srs", "download_detour": "Proxy" },
         { "tag": "bing", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/bing.srs", "download_detour": "Proxy" },
