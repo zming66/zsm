@@ -33,7 +33,7 @@
    "servers": 
    [
      {"tag": "local", "type": "udp", "server": "223.5.5.5", "detour": "🎯 全球直连"},
-     {"tag": "google", "type": "tls", "server": "8.8.8.8", "address_strategy": "ipv4_only", "strategy": "ipv4_only", "detour": "🚀 节点选择"},
+     {"tag": "google", "type": "tls", "server": "8.8.8.8", "strategy": "ipv4_only", "detour": "🚀 节点选择"},
      {"tag": "fakeip","type": "fakeip","inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
    ],
    "rules": 
@@ -71,7 +71,7 @@
           }
         ],
         "server": "google",
-        "client_subnet": "114.114.114.114/24"
+        "client_subnet": "203.80.96.10/24"
       },
       {
         "query_type": [
