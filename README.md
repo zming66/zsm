@@ -1,2 +1,2 @@
 
-MihomoTProxy
+singbox
