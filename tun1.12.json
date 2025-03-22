@@ -135,8 +135,6 @@
       "rules": [
         { "inbound": ["tun-in", "mixed-in"],"action": "sniff"},
         { "type": "logical","mode": "or","rules":[{"port":53},{"protocol": "dns"}],"action": "hijack-dns"},
-        { "rule_set": "geosite-category-ads-all","clash_mode": "rule","action": "reject"},
-        { "rule_set": "geosite-category-ads-all", "clash_mode": "global", "outbound": "🚀 节点选择"},
         { "action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
         { "action": "route", "clash_mode": "global", "outbound": "🌏 全局代理" },
         { "domain": ["clash.razord.top", "yacd.metacubex.one", "yacd.haishan.me", "d.metacubex.one"], "outbound": "🎯 全球直连" },
@@ -161,7 +159,6 @@
       "rule_set": [
         { "tag": "direct", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/zming66/sing-box-geosite/refs/heads/main/rule/Direct.srs", "download_detour": "🚀 节点选择" },
         { "tag": "proxylite", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/zming66/sing-box-geosite/refs/heads/main/rule/Proxy.srs", "download_detour": "🚀 节点选择" },
-        { "tag": "geosite-category-ads-all","type": "remote","format": "binary", "update_interval": "1d", "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs","download_detour": "🎯 全球直连"},
         { "tag": "steam", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/steam.srs", "download_detour": "🚀 节点选择" },
         { "tag": "bing", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/bing.srs", "download_detour": "🚀 节点选择" },
         { "tag": "geosite-chat", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ai-chat-!cn.srs", "download_detour": "🚀 节点选择" },
