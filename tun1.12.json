@@ -26,47 +26,17 @@
    "servers": 
    [
      {"tag": "local", "type": "udp", "server": "10.10.10.1", "detour": "🎯 全球直连"},
-     {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"},
-     {"tag": "fakeip","type": "fakeip","inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
-   ],
+     {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"}
+     ],
    "rules": 
-   [
-     {
-        "clash_mode": "🎯 全球直连",
-        "server": "local"
-      },
-      {
-        "clash_mode": "🌏 全局代理",
-        "server": "google"
-      },
-      {
-        "rule_set": "geosite-cn",
-        "server": "local"
-      },
-      {
-        "type": "logical",
-        "mode": "and",
-        "rules": [
-          {
-            "rule_set": "geosite-geolocation-!cn",
-            "invert": true
-          },
-          {
-            "rule_set": "geoip-cn"
-          }
-        ],
-        "server": "google",
-        "client_subnet": "203.80.96.10/24"
-      },
-      {
-        "query_type": [
-          "A"
-        ],
-        "server": "fakeip"
-      }
-    ],
-    "independent_cache": true,
-    "strategy": "prefer_ipv4"
+   [{"outbound": "any", "server": "local", "disable_cache": true},
+     {"clash_mode": "Direct", "server": "local"},
+     {"clash_mode": "Global", "server": "google"},
+     {"rule_set": "geosite-cn", "action": "route","server": "local"},
+     {"rule_set": "geosite-geolocation-!cn", "server": "google", "strategy": "ipv4_only"}
+   ],
+   "independent_cache": true,
+   "strategy": "prefer_ipv4"
   },
   
   "inbounds": [
@@ -77,7 +47,6 @@
         "172.19.0.0/30",
         "fdfe:dcba:9876::0/126"
       ],
-      "stack": "gvisor",
       "auto_route": true,
       "strict_route": true,
       "platform": {
@@ -133,7 +102,7 @@
           "final": "🐠 漏网之鱼",
       "rules": [
         { "inbound": ["tun-in", "mixed-in"],"action": "sniff"},
-        { "type": "logical","mode": "or","rules":[{"port":53},{"protocol": "dns"}],"action": "hijack-dns"},
+        { "protocol": "dns", "action": "hijack-dns"},
         { "action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
         { "action": "route", "clash_mode": "global", "outbound": "🌏 全局代理" },
         { "domain": ["clash.razord.top", "yacd.metacubex.one", "yacd.haishan.me", "d.metacubex.one"], "outbound": "🎯 全球直连" },
