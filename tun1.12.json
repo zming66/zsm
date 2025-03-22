@@ -29,7 +29,7 @@
      {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"}
      ],
    "rules": 
-   [{"outbound": "any", "server": "local", "disable_cache": true},
+   [ 
      {"clash_mode": "Direct", "server": "local"},
      {"clash_mode": "Global", "server": "google"},
      {"rule_set": "geosite-cn", "action": "route","server": "local"},
