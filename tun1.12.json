@@ -26,18 +26,17 @@
    "servers": 
    [
      {"tag": "local", "type": "udp", "server": "10.10.10.1", "detour": "🎯 全球直连"},
-     {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"},
-     {"tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
+     {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"}
      ],
    "rules": 
    [ 
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
      {"rule_set": "geosite-cn","server": "local"},
-     {"rule_set": "geosite-geolocation-!cn","query_type": ["A","AAAA"],"server": "fakeip"}],
+     {"rule_set": "geosite-geolocation-!cn","server": "google"}],
     "cache_capacity": 2048,
-    "final": "dns_proxy",
-    "strategy": "ipv4_only"
+    "final": "google",
+    "strategy": "prefer_ipv4"
   },
   
   "inbounds": [
