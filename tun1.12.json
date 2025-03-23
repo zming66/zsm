@@ -33,7 +33,7 @@
      {"clash_mode": "Direct", "server": "local"},
      {"clash_mode": "Global", "server": "google"},
      {"rule_set": "geosite-cn", "action": "route","server": "local"},
-     {"query_type": "A", "rule_set": "geosite-geolocation-!cn", "server": "google"}
+     {"rule_set": "geosite-geolocation-!cn", "server": "google"}
    ],
    "independent_cache": true,
    "strategy": "prefer_ipv4"
