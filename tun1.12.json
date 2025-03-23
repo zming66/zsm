@@ -34,7 +34,7 @@
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
      {"rule_set": "geosite-cn","server": "local"},
-     {"rule_set": "geosite-geolocation-!cn","query_type": ["A"],"server": "fakeip","client_subnet": "222.172.200.68/24"}],
+     {"rule_set": "geosite-geolocation-!cn","query_type": ["A"],"server": "fakeip"}],
     "independent_cache": true,
     "strategy": "prefer_ipv4"
   },
@@ -91,7 +91,7 @@
       { "tag": "🎯 全球直连", "type": "direct" }
     ],
   "route": {
-          "default_domain_resolver": {"server": "local"},
+          "default_domain_resolver": {"server": "local", "rewrite_ttl": 60, "client_subnet": "222.172.200.68"},
           "auto_detect_interface": true,
           "final": "🐠 漏网之鱼",
       "rules": [
