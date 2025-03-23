@@ -9,7 +9,7 @@
       "external_controller": "0.0.0.0:9090",
       "external_ui": "/etc/sing-box/ui",
       "secret": "zsming",
-      "external_ui_download_url": "https://ghfast.top/https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip",
+      "external_ui_download_url": "https://gh-proxy.com/https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip",
       "external_ui_download_detour": "🎯 全球直连",
       "default_mode": "rule"
     },
@@ -27,16 +27,18 @@
    [
      {"tag": "local", "type": "udp", "server": "10.10.10.1", "detour": "🎯 全球直连"},
      {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"}
+     {"tag": "fakeip", "type": "fakeip", "inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
      ],
    "rules": 
    [ 
-     {"clash_mode": "Direct", "server": "local"},
-     {"clash_mode": "Global", "server": "google"},
-     {"rule_set": "geosite-cn", "action": "route","server": "local"},
-     {"rule_set": "geosite-geolocation-!cn", "server": "google"}
-   ],
-   "independent_cache": true,
-   "strategy": "prefer_ipv4"
+     {"clash_mode": "direct","server": "local"},
+     {"clash_mode": "global","server": "google"},
+     {"query_type": ["A","AAAA"],"rule_set": "geosite-cn","server": "fakeip"},
+     {"rule_set": "geosite-cn","server": "local"},
+     {"type": "logical","mode": "and","rules": [ {"rule_set": "geosite-geolocation-!cn","invert": true},{"rule_set": "geoip-cn"} ],"server": "google","client_subnet": "222.172.200.68/24"},
+     {"query_type": ["A","AAAA"],"server": "fakeip"}],
+    "independent_cache": true,
+    "strategy": "prefer_ipv4"
   },
   
   "inbounds": [
@@ -96,7 +98,7 @@
           "final": "🐠 漏网之鱼",
       "rules": [
         { "inbound": ["tun-in", "mixed-in"],"action": "sniff"},
-        { "protocol": "dns", "action": "hijack-dns"},
+        { "type": "logical", "mode": "or", "rules":[ { "port":53 }, { "protocol": "dns" } ], "action": "hijack-dns" },
         { "action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
         { "action": "route", "clash_mode": "global", "outbound": "Global" },
         { "domain": ["clash.razord.top", "yacd.metacubex.one", "yacd.haishan.me", "d.metacubex.one"], "outbound": "🎯 全球直连" },
