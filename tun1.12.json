@@ -33,7 +33,7 @@
    [ 
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
-     {"rule_set": "geosite-cn","action": "route", "server": "local"},
+     {"rule_set": "geosite-cn","server": "local"},
      {"rule_set": "geosite-geolocation-!cn","query_type": ["A"],"server": "fakeip"}],
     "cache_capacity": 2048,
     "final": "dns_proxy",
