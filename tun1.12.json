@@ -91,7 +91,7 @@
       { "tag": "🎯 全球直连", "type": "direct" }
     ],
   "route": {
-          "default_domain_resolver": {"server": "local", "rewrite_ttl": 60, "client_subnet": "222.172.200.68"},
+          "default_domain_resolver": {"server": "local"},
           "auto_detect_interface": true,
           "final": "🐠 漏网之鱼",
       "rules": [
