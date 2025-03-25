@@ -25,8 +25,8 @@
  {
    "servers": 
    [
-     {"tag": "local", "type": "udp", "server": "10.10.10.1", "detour": "🎯 全球直连"},
-     {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"}
+     {"tag": "local", "type": "udp", "server": "10.10.10.1"},
+     {"tag": "google", "type": "tls", "server": "8.8.8.8"}
      ],
    "rules": 
    [ 
