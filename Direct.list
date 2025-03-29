@@ -14,7 +14,7 @@ DOMAIN-SUFFIX,icloud.com
 #DOMAIN-KEYWORD,baidu
 
 # IP段匹配
-IP-CIDR,10.10.10.0/24,no-resolve
+
 
 # 国内DNS
 DOMAIN-SUFFIX,dns.alidns.com
