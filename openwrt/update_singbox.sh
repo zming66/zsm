@@ -167,7 +167,7 @@ replace_by_ipk() {
 }
 
 # 主程序
-main() {
+singbox() {
   check_dependencies
   mkdir -p "$TEMP_DIR" "$BACKUP_DIR"
   IPK_ARCH=$(determine_ipk_arch)
@@ -208,4 +208,4 @@ main() {
   rm -rf "$TEMP_DIR"
 }
 
-main
+singbox
