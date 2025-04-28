@@ -1,13 +1,14 @@
 #!/bin/sh
-# OpenWrt sing-box 极简更新脚本 - 仅显示最新稳定版和测试版
+# OpenWrt sing-box 安全更新脚本
 
 # =====================
-# 配置区（按需修改）
+# 配置区
 # =====================
-REPO="SagerNet/sing-box"         # GitHub 仓库
-BIN_PATH="/usr/bin/sing-box"     # 可执行文件路径
-TEMP_DIR="/tmp/sing-box_update"  # 临时目录
-BACKUP_DIR="/etc/sing-box/backup" # 备份目录
+REPO="SagerNet/sing-box"
+BIN_PATH="/usr/bin/sing-box"
+TEMP_DIR="/tmp/sing-box_update"
+BACKUP_DIR="/etc/sing-box/backup"
+MAX_RETRY=3
 
 # =====================
 # 颜色定义
@@ -23,10 +24,10 @@ NC='\033[0m'
 # =====================
 check_dependencies() {
   for cmd in jq uclient-fetch opkg; do
-    if ! command -v $cmd >/dev/null; then
-      echo -e "${RED}错误：缺少必要依赖 $cmd${NC}"
+    command -v $cmd >/dev/null || {
+      echo -e "${RED}错误：缺少依赖 $cmd${NC}"
       exit 1
-    fi
+    }
   done
 }
 
@@ -43,10 +44,13 @@ determine_arch() {
 }
 
 # =====================
-# 获取最新版本信息
+# 智能版本获取
 # =====================
 get_latest_versions() {
-  releases=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases")
+  releases=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" || {
+    echo -e "${RED}错误：无法获取版本信息${NC}"
+    exit 1
+  })
   
   stable=$(echo "$releases" | jq -r '[.[] | select(.prerelease == false)][0].tag_name')
   beta=$(echo "$releases" | jq -r '[.[] | select(.prerelease == true)][0].tag_name')
@@ -55,7 +59,7 @@ get_latest_versions() {
 }
 
 # =====================
-# 安装逻辑核心
+# 安全安装流程
 # =====================
 install_version() {
   version=$1
@@ -80,30 +84,47 @@ install_version() {
     return 1
   }
 
-  # 清理旧版本
-  [ -f "/etc/init.d/sing-box" ] && {
-    echo -e "${CYAN}停止运行中的服务...${NC}"
-    /etc/init.d/sing-box stop
+  # 下载流程（失败立即退出）
+  mkdir -p "$TEMP_DIR"
+  retry=0
+  while [ $retry -lt $MAX_RETRY ]; do
+    echo -e "${CYAN}下载尝试: $((retry+1))/$MAX_RETRY${NC}"
+    if uclient-fetch -qO "$TEMP_DIR/sing-box.ipk" "$ipk_url"; then
+      echo -e "${GREEN}✓ 下载成功${NC}"
+      break
+    fi
+    retry=$((retry+1))
+    sleep 3
+  done
+
+  [ $retry -eq $MAX_RETRY ] && {
+    echo -e "${RED}✗ 下载失败，终止流程${NC}"
+    return 1
   }
 
-  # 下载文件
-  echo -e "${CYAN}正在下载: ${GREEN}$(basename "$ipk_url")${NC}"
-  mkdir -p "$TEMP_DIR"
-  uclient-fetch -qO "$TEMP_DIR/sing-box.ipk" "$ipk_url" || return 1
+  # 以下流程仅在下载成功后执行
+  # 停止服务
+  if [ -f "/etc/init.d/sing-box" ]; then
+    echo -e "${CYAN}停止服务...${NC}"
+    /etc/init.d/sing-box stop || echo -e "${YELLOW}服务停止失败，继续安装${NC}"
+  else
+    echo -e "${YELLOW}未找到服务文件，跳过停止${NC}"
+  fi
 
-  # 备份旧版本
+  # 备份旧版
   [ -f "$BIN_PATH" ] && {
     backup_file="$BACKUP_DIR/sing-box_$(date +%Y%m%d%H%M%S).bak"
+    mkdir -p "$BACKUP_DIR"
     cp "$BIN_PATH" "$backup_file"
-    echo -e "${CYAN}已备份旧版本至: ${YELLOW}$backup_file${NC}"
+    echo -e "${CYAN}已备份: ${YELLOW}$backup_file${NC}"
   }
 
-  # 执行安装
-  echo -e "${CYAN}开始安装操作...${NC}"
+  # 安装流程
+  echo -e "${CYAN}开始安装...${NC}"
   opkg remove sing-box >/dev/null 2>&1
   if opkg install --force-reinstall "$TEMP_DIR/sing-box.ipk"; then
     echo -e "${GREEN}✓ 安装成功${NC}"
-    # 验证版本
+    # 版本验证
     new_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
     [ "$new_ver" = "$version" ] && \
       echo -e "${GREEN}当前版本: $new_ver${NC}" || \
@@ -116,29 +137,24 @@ install_version() {
   # 启动服务
   [ -f "/etc/init.d/sing-box" ] && {
     echo -e "${CYAN}启动服务...${NC}"
-    /etc/init.d/sing-box start
+    /etc/init.d/sing-box start || echo -e "${RED}服务启动失败，请手动检查${NC}"
   }
 }
 
 # =====================
-# 用户交互界面
+# 用户界面
 # =====================
 show_menu() {
   clear
   current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
   IFS=' ' read -r stable_ver beta_ver <<< "$(get_latest_versions)"
   
-  # 显示头信息
-  echo -e "\n${CYAN}======= Sing-box 更新助手 =======${NC}"
-  echo -e "[当前版本] ${GREEN}${current_ver:-未安装}${NC}"
+  echo -e "\n${CYAN}=== Sing-box 更新助手 ==="
+  echo -e "当前版本: ${GREEN}${current_ver:-未安装}${NC}"
+  echo -e "\n${CYAN}1) 稳定版: $stable_ver"
+  echo -e "2) 测试版: $beta_ver${NC}"
+  echo -e "\n${YELLOW}q) 退出${NC}"
   
-  # 版本选项
-  echo -e "\n${CYAN}可用版本：${NC}"
-  echo -e "1) ${GREEN}稳定版: $stable_ver${NC}"
-  echo -e "2) ${YELLOW}测试版: $beta_ver${NC}"
-  echo -e "\nq) 退出"
-  
-  # 输入处理
   echo -ne "\n${CYAN}请选择 (1/2/q): ${NC}"
   read -r choice
   
@@ -147,21 +163,21 @@ show_menu() {
     2) install_version "$beta_ver" ;;
     q) exit 0 ;;
     *) 
-      echo -e "${RED}无效输入，请重新选择${NC}"
-      sleep 1
+      echo -e "${RED}无效输入，2秒后重试...${NC}"
+      sleep 2
       show_menu
       ;;
   esac
 }
 
 # =====================
-# 主程序入口
+# 主程序
 # =====================
 singbox() {
   check_dependencies
   mkdir -p "$TEMP_DIR" "$BACKUP_DIR"
   show_menu
-  rm -rf "$TEMP_DIR"
+  rm -rf "$TEMP_DIR"  # 清理临时文件
 }
 
 singbox
