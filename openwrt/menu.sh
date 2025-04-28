@@ -209,7 +209,7 @@ handle_choice() {
         10)
             bash "$SCRIPT_DIR/update_ui.sh"
             ;;
-        11）
+        11)
             bash "$SCRIPT_DIR/update_sing-box.sh"
             ;;
         0)
