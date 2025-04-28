@@ -169,9 +169,9 @@ show_menu() {
   echo -e "当前版本: ${GREEN}${current_ver:-未安装}${NC}"
   echo -e "\n${CYAN}1) 稳定版: $stable_ver"
   echo -e "2) 测试版: $beta_ver${NC}"
-  echo -e "\n${YELLOW}q) 退出${NC}"
+  echo -e "\n${YELLOW}0) 退出${NC}"
   
-  echo -ne "\n${CYAN}请选择 (1/2/q): ${NC}"
+  echo -ne "\n${CYAN}请选择 (1/2/0): ${NC}"
   read -r choice
   
   case $choice in
