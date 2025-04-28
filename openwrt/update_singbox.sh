@@ -177,7 +177,7 @@ show_menu() {
   case $choice in
     1) install_version "$stable_ver" ;;
     2) install_version "$beta_ver" ;;
-    q) exit 0 ;;
+    0) exit 0 ;;
     *) 
       echo -e "${RED}无效输入，2秒后重试...${NC}"
       sleep 2
