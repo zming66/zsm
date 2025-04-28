@@ -1,4 +1,4 @@
 ## 脚本：
 ```
-bash <(curl -sL https://gh-proxy.com/https://raw.githubusercontent.com/qljsyph/sbshell/refs/heads/main//sbshall.sh)
+bash <(curl -sL https://gh-proxy.comhttps://raw.githubusercontent.com/zming66/zsm/refs/heads/main/sbshall.sh)
 ```
