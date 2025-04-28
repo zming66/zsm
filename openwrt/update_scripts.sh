@@ -92,7 +92,7 @@ SCRIPTS=(
     "switch_mode.sh"
     "manage_autostart.sh"
     "check_config.sh"
-    "update_sing-box"
+    "update_sing-box.sh"
     "update_scripts.sh"
     "update_ui.sh"
     "menu.sh"
