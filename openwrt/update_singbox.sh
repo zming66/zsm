@@ -1,183 +1,204 @@
 #!/bin/sh
-# OpenWrt专用sing-box更新脚本
-# 该脚本直接从GitHub仓库下载IPK文件并通过opkg进行安装更新
+# OpenWrt 环境下 sing-box 自动更新脚本（支持 Latest 稳定版和 Pre-release 测试版）
 
-# 定义颜色变量，便于终端输出友好提示
+# =====================
+# 配置参数（按需修改）
+# =====================
+REPO="SagerNet/sing-box"         # GitHub 仓库名
+BIN_PATH="/usr/bin/sing-box"     # 可执行文件路径
+TEMP_DIR="/tmp/sing-box_update"  # 临时下载目录
+BACKUP_DIR="/etc/sing-box/backup" # 备份目录
+
+# 颜色定义
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-# 仓库、安装路径以及临时工作目录设置
-REPO="SagerNet/sing-box"
-BIN_PATH="/usr/bin/sing-box"
-TEMP_DIR="/tmp/sing-box_update"
-BACKUP_DIR="/etc/sing-box/backup"
+# 依赖检查
+check_dependencies() {
+  for cmd in jq uclient-fetch opkg; do
+    if ! command -v $cmd >/dev/null; then
+      echo -e "${RED}错误：缺少依赖 $cmd，请先安装${NC}"
+      exit 1
+    fi
+  done
+}
 
-# 创建必要目录
-mkdir -p "$TEMP_DIR" "$BACKUP_DIR"
-
-# 根据系统架构返回对应的标识
+# 架构检测
 determine_ipk_arch() {
-    case "$(uname -m)" in
-        x86_64) echo "amd64" ;;
-        aarch64) echo "arm64" ;;
-        armv7l|armv7) echo "armv7" ;;
-        i686) echo "i386" ;;
-        *) echo "$(uname -m)" ;;
-    esac
+  case "$(uname -m)" in
+    x86_64) echo "x86_64" ;;   # OpenWrt 中 amd64 对应 x86_64
+    aarch64) echo "arm64" ;;
+    armv7l) echo "armv7"  ;;
+    *) echo "$(uname -m)" ;;
+  esac
 }
-IPK_ARCH=$(determine_ipk_arch)
 
-# 从GitHub获取发布信息，利用jq将版本分为稳定版和测试版
+# 获取版本信息
 fetch_releases() {
-    uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" | \
-    jq -r 'group_by(.prerelease) | {
-        "stable": [.[] | select(.prerelease == false) | .tag_name],
-        "beta":   [.[] | select(.prerelease == true)  | .tag_name]
-    }'
+  # 获取 Latest 标签
+  latest_tag=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null | jq -r '.tag_name')
+  
+  # 获取全量发布数据
+  releases_json=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" 2>/dev/null)
+  
+  # 提取稳定版和测试版列表
+  echo "$releases_json" | jq --arg lt "$latest_tag" -r '
+    {
+      latest: $lt,
+      stable: [.[] | select(.prerelease == false) | .tag_name],
+      beta: [.[] | select(.prerelease == true) | .tag_name]
+    }
+  '
 }
 
-# 显示当前安装版本及可选的稳定版和测试版列表
+# 显示交互菜单
 show_menu() {
-    current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/{print $3}')
-    releases=$(fetch_releases)
-    
-    echo -e "\n${CYAN}=== 当前版本 ===${NC}"
-    if [ -n "$current_ver" ]; then
-        echo -e "${GREEN}$current_ver${NC}"
-    else
-        echo -e "${RED}未安装${NC}"
-    fi
-    
-    echo -e "\n${CYAN}=== 稳定版列表 ===${NC}"
-    stable_vers=$(echo "$releases" | jq -r '.stable[]')
-    if [ -n "$stable_vers" ]; then
-        echo "$stable_vers" | nl -w 3 -s ") "
-    else
-        echo -e "${YELLOW}暂无稳定版${NC}"
-    fi
-    
-    echo -e "\n${CYAN}=== 测试版列表 ===${NC}"
-    beta_vers=$(echo "$releases" | jq -r '.beta[]')
-    if [ -n "$beta_vers" ]; then
-        echo "$beta_vers" | nl -w 3 -s ") " | awk '{print $0" (测试版)"}'
-    else
-        echo -e "${YELLOW}暂无测试版${NC}"
-    fi
+  # 当前版本
+  current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
+  
+  # 获取版本数据
+  releases=$(fetch_releases)
+  latest_tag=$(echo "$releases" | jq -r '.latest')
+  stable_vers=$(echo "$releases" | jq -r '.stable[]')
+  beta_vers=$(echo "$releases" | jq -r '.beta[]')
+
+  # 显示信息
+  echo -e "\n${CYAN}=== 当前版本 ===${NC}"
+  [ -n "$current_ver" ] && echo -e "${GREEN}$current_ver${NC}" || echo -e "${RED}未安装${NC}"
+
+  # 稳定版列表
+  echo -e "\n${CYAN}=== 稳定版 ===${NC}"
+  if [ -n "$stable_vers" ]; then
+    cnt=1
+    while IFS= read -r ver; do
+      if [ "$ver" = "$latest_tag" ]; then
+        echo -e "  ${GREEN}$cnt) $ver (Latest)${NC}"
+      else
+        echo "  $cnt) $ver"
+      fi
+      cnt=$((cnt+1))
+    done <<< "$stable_vers"
+  else
+    echo -e "${YELLOW}无可用稳定版${NC}"
+  fi
+
+  # 测试版列表
+  echo -e "\n${CYAN}=== 测试版 ===${NC}"
+  if [ -n "$beta_vers" ]; then
+    cnt=1
+    while IFS= read -r ver; do
+      echo "  $cnt) $ver (Pre-release)"
+      cnt=$((cnt+1))
+    done <<< "$beta_vers"
+  else
+    echo -e "${YELLOW}无可用测试版${NC}"
+  fi
+
+  # 快捷选项
+  echo -e "\n${CYAN}快捷安装：${NC}"
+  echo -e "  ${GREEN}L) 最新稳定版 (${latest_tag})${NC}"
+  [ -n "$beta_vers" ] && echo -e "  ${YELLOW}P) 最新测试版 ($(echo "$beta_vers" | head -1))${NC}"
 }
 
-# 通过下载IPK文件并使用opkg进行安装更新sing-box
+# 安装逻辑
 replace_by_ipk() {
-    version=$1
-    # 获取当前已安装的版本
-    current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/{print $3}')
-    
-    if [ "$current_ver" = "$version" ]; then
-        echo -e "${YELLOW}当前已安装版本 $version，无需更新。${NC}"
-        return 0
-    fi
+  version=$1
+  [ -z "$version" ] && return 1
 
-    # 根据架构，如果返回amd64则实际文件中使用x86_64标识
-    if [ "$IPK_ARCH" = "amd64" ]; then
-        ipk_arch_label="x86_64"
-    else
-        ipk_arch_label="$IPK_ARCH"
-    fi
+  # 检查当前版本
+  current_ver=$($BIN_PATH version 2>/dev/null | awk '{print $3}')
+  [ "$current_ver" = "$version" ] && echo -e "${YELLOW}已是最新版本${NC}" && return 0
 
-    # 获取指定版本的IPK下载地址，要求文件名中包含 "openwrt"、正确的架构标识并以 .ipk结尾
-    ipk_url=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" | \
-              jq --arg tag "$version" --arg arch "$ipk_arch_label" -r \
-              '.[] | select(.tag_name == $tag) | .assets[] | 
-              select(.name | contains("openwrt") and contains($arch) and endswith(".ipk")) | .browser_download_url')
+  # 架构处理
+  IPK_ARCH=$(determine_ipk_arch)
+  case "$IPK_ARCH" in
+    x86_64) search_arch="x86_64" ;;
+    arm64) search_arch="arm64"   ;;
+    *) search_arch="$IPK_ARCH"   ;;
+  esac
 
-    [ -z "$ipk_url" ] && { echo -e "${RED}错误：未找到对应版本的IPK文件${NC}"; return 1; }
+  # 查找 IPK 下载链接
+  asset_url=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" | \
+    jq -r --arg ver "$version" --arg arch "$search_arch" '
+      .[] | select(.tag_name == $ver) |
+      .assets[] | select(.name | contains("openwrt") and contains($arch) and endswith(".ipk")) |
+      .browser_download_url
+    ')
 
-    # 下载IPK包
-    echo -e "${CYAN}正在下载：${GREEN}$(basename "$ipk_url")${NC}"
-    if ! uclient-fetch -qO "$TEMP_DIR/package.ipk" "$ipk_url"; then
-        echo -e "${RED}错误：下载失败，请检查网络连接${NC}"
-        return 1
-    fi
+  [ -z "$asset_url" ] && echo -e "${RED}未找到对应架构的 IPK 文件${NC}" && return 1
 
-    # 停止sing-box服务（若存在）
-    if [ -f /etc/init.d/sing-box ]; then
-        echo -e "${CYAN}停止sing-box服务...${NC}"
-        /etc/init.d/sing-box stop
-    fi
+  # 下载文件
+  echo -e "${CYAN}下载 IPK 包...${NC}"
+  mkdir -p "$TEMP_DIR"
+  uclient-fetch -qO "$TEMP_DIR/sing-box.ipk" "$asset_url" || return 1
 
-    # 备份当前二进制文件
-    backup_file="$BACKUP_DIR/sing-box_$(date +%Y%m%d%H%M).bak"
-    cp "$BIN_PATH" "$backup_file" 2>/dev/null
-    echo -e "${CYAN}已创建备份：${GREEN}$backup_file${NC}"
+  # 停止服务
+  [ -f "/etc/init.d/sing-box" ] && /etc/init.d/sing-box stop
 
-    # 使用opkg安装IPK文件，--force-reinstall选项确保对已安装包进行覆盖安装
-    echo -e "${CYAN}执行 opkg 安装...${NC}"
-    if opkg install --force-reinstall "$TEMP_DIR/package.ipk"; then
-        echo -e "${GREEN}IPK安装成功${NC}"
-    else
-        echo -e "${RED}错误：IPK安装失败，请检查问题${NC}"
-        return 1
-    fi
+  # 备份旧版
+  if [ -f "$BIN_PATH" ]; then
+    backup_file="$BACKUP_DIR/sing-box_$(date +%s).bak"
+    cp "$BIN_PATH" "$backup_file"
+    echo -e "${CYAN}已备份旧版本至: ${backup_file}${NC}"
+  fi
 
-    # 启动sing-box服务（若存在）
-    if [ -f /etc/init.d/sing-box ]; then
-        echo -e "${CYAN}启动sing-box服务...${NC}"
-        /etc/init.d/sing-box start
-    fi
+  # 安装新包
+  echo -e "${CYAN}执行安装...${NC}"
+  opkg install --force-reinstall "$TEMP_DIR/sing-box.ipk"
 
-    # 验证更新后的版本
-    new_ver=$($BIN_PATH version 2>/dev/null | awk '/version/{print $3}')
-    if [ "$new_ver" = "$version" ]; then
-        echo -e "${GREEN}成功更新到版本: $new_ver${NC}"
-    else
-        echo -e "${RED}更新后版本验证失败，请手动检查${NC}"
-        return 1
-    fi
+  # 启动服务
+  [ -f "/etc/init.d/sing-box" ] && /etc/init.d/sing-box start
 
-    # 清理临时文件
-    rm -rf "$TEMP_DIR"/*
+  # 验证版本
+  new_ver=$($BIN_PATH version 2>/dev/null | awk '{print $3}')
+  [ "$new_ver" = "$version" ] && \
+    echo -e "${GREEN}更新成功! 新版本: $new_ver${NC}" || \
+    echo -e "${RED}版本验证失败，请手动检查${NC}"
 }
 
-# 主程序：循环显示菜单，等待用户输入稳定版 (s序号) 或测试版 (b序号) 进行更新，输入q退出
-update_singbox() {
-    while :; do
-        show_menu
-        echo -ne "\n${CYAN}输入版本序号 (s-稳定版/b-测试版/q退出): ${NC}"
-        read choice
-        
-        case $choice in
-            q|Q)
-                break
-                ;;
-            s*|b*)
-                type=${choice:0:1}
-                num=${choice:1}
-                
-                [ -z "$num" ] && {
-                    echo -ne "${CYAN}请输入具体序号: ${NC}"
-                    read num
-                }
-                
-                if [ "$type" = "s" ]; then
-                    version=$(echo "$releases" | jq -r ".stable[$((num-1))]")
-                else
-                    version=$(echo "$releases" | jq -r ".beta[$((num-1))]")
-                fi
-                
-                [ "$version" = "null" ] && {
-                    echo -e "${RED}无效版本选择!${NC}"
-                    continue
-                }
-                
-                replace_by_ipk "$version"
-                ;;
-            *)
-                echo -e "${RED}无效输入，请使用 s序号/b序号 格式选择${NC}"
-                ;;
-        esac
-    done
+# 主程序
+singbox() {
+  check_dependencies
+  mkdir -p "$TEMP_DIR" "$BACKUP_DIR"
+  IPK_ARCH=$(determine_ipk_arch)
+
+  while :; do
+    show_menu
+    echo -ne "\n${CYAN}请选择版本 (L/P/序号/q): ${NC}"
+    read choice
+
+    case $choice in
+      q|Q) break ;;
+      l|L)
+        version=$(echo "$releases" | jq -r '.latest')
+        [ "$version" != "null" ] && replace_by_ipk "$version"
+        ;;
+      p|P)
+        version=$(echo "$releases" | jq -r '.beta[0]')
+        [ "$version" != "null" ] && replace_by_ipk "$version"
+        ;;
+      [0-9]*)
+        type=$(echo "$choice" | sed 's/[0-9]*//g')
+        num=$(echo "$choice" | sed 's/[^0-9]*//g')
+        [ -z "$num" ] && continue
+
+        if [ "$type" = "s" ]; then
+          version=$(echo "$stable_vers" | sed -n "${num}p")
+        elif [ "$type" = "b" ]; then
+          version=$(echo "$beta_vers" | sed -n "${num}p")
+        else
+          version=$(echo "$stable_vers" "$beta_vers" | tr ' ' '\n' | sed -n "${num}p")
+        fi
+        replace_by_ipk "$version"
+        ;;
+      *) echo -e "${RED}无效输入${NC}" ;;
+    esac
+  done
+
+  rm -rf "$TEMP_DIR"
 }
 
-update_singbox
+singbox
