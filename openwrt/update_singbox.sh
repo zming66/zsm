@@ -1,5 +1,5 @@
 #!/bin/sh
-# OpenWrt sing-box 安全更新脚本
+# OpenWrt sing-box 安全更新脚本（无防火墙检查版）
 
 # =====================
 # 配置区
@@ -84,7 +84,7 @@ install_version() {
     return 1
   }
 
-  # 下载流程（失败立即退出）
+  # 下载流程
   mkdir -p "$TEMP_DIR"
   retry=0
   while [ $retry -lt $MAX_RETRY ]; do
@@ -102,13 +102,10 @@ install_version() {
     return 1
   }
 
-  # 以下流程仅在下载成功后执行
   # 停止服务
   if [ -f "/etc/init.d/sing-box" ]; then
     echo -e "${CYAN}停止服务...${NC}"
     /etc/init.d/sing-box stop || echo -e "${YELLOW}服务停止失败，继续安装${NC}"
-  else
-    echo -e "${YELLOW}未找到服务文件，跳过停止${NC}"
   fi
 
   # 备份旧版
@@ -124,11 +121,30 @@ install_version() {
   opkg remove sing-box >/dev/null 2>&1
   if opkg install --force-reinstall "$TEMP_DIR/sing-box.ipk"; then
     echo -e "${GREEN}✓ 安装成功${NC}"
+
+    # 清理opkg备份文件
+    CONFIG_BACKUPS=(
+      "/etc/init.d/sing-box-opkg"
+      "/etc/sing-box/config.json-opkg"
+    )
+    for backup_file in "${CONFIG_BACKUPS[@]}"; do
+      [ -f "$backup_file" ] && rm -f "$backup_file"
+    done
+
+    # 配置文件处理
+    if [ -f "/etc/sing-box/config.json-opkg" ]; then
+      echo -e "${YELLOW}检测到配置文件冲突，自动保留当前配置${NC}"
+      rm -f "/etc/sing-box/config.json-opkg"
+    fi
+
     # 版本验证
     new_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
-    [ "$new_ver" = "$version" ] && \
-      echo -e "${GREEN}当前版本: $new_ver${NC}" || \
-      echo -e "${YELLOW}版本验证异常，请手动确认${NC}"
+    if [ "$new_ver" = "$version" ]; then
+      echo -e "${GREEN}当前版本: $new_ver${NC}"
+    else
+      echo -e "${YELLOW}版本验证异常，尝试重启服务...${NC}"
+      [ -f "/etc/init.d/sing-box" ] && /etc/init.d/sing-box restart
+    fi
   else
     echo -e "${RED}✗ 安装失败${NC}"
     return 1
@@ -137,7 +153,7 @@ install_version() {
   # 启动服务
   [ -f "/etc/init.d/sing-box" ] && {
     echo -e "${CYAN}启动服务...${NC}"
-    /etc/init.d/sing-box start || echo -e "${RED}服务启动失败，请手动检查${NC}"
+    /etc/init.d/sing-box start
   }
 }
 
@@ -177,7 +193,7 @@ singbox() {
   check_dependencies
   mkdir -p "$TEMP_DIR" "$BACKUP_DIR"
   show_menu
-  rm -rf "$TEMP_DIR"  # 清理临时文件
+  rm -rf "$TEMP_DIR"
 }
 
 singbox
