@@ -59,9 +59,44 @@ verify_binary() {
     file "$1" | grep -q "ELF"
 }
 
+# 执行文件替换
 replace_binary() {
-    # ...（保持原有文件下载和替换逻辑不变）...
+    version=$1
+    ipk_url=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" | \
+              jq -r ".[] | select(.tag_name == \"$version\") | .assets[] | 
+              select(.name | contains(\"openwrt\") and endswith(\".ipk\")) | .browser_download_url")
+
+    [ -z "$ipk_url" ] && { echo -e "${RED}错误：未找到对应版本的IPK文件${NC}"; return 1; }
+
+    # 下载IPK文件
+    echo -e "${CYAN}正在下载：${GREEN}$(basename "$ipk_url")${NC}"
+    uclient-fetch -qO "$TEMP_DIR/package.ipk" "$ipk_url" || return 1
+
+    # 解压IPK
+    echo -e "${CYAN}解压文件中..."
+    tar -xzOf "$TEMP_DIR/package.ipk" ./data.tar.gz | tar -xzf - -C "$TEMP_DIR" ./usr/bin/sing-box
+
+    # 验证二进制文件
+    if ! verify_binary "$TEMP_DIR/usr/bin/sing-box"; then
+        echo -e "${RED}错误：文件校验失败${NC}"
+        return 1
+    fi
+
+    # 创建备份
+    backup_file="$BACKUP_DIR/sing-box_$(date +%Y%m%d%H%M).bak"
+    cp "$BIN_PATH" "$backup_file"
+    echo -e "${CYAN}已创建备份：${GREEN}$backup_file${NC}"
+
+    # 替换文件
+    echo -e "${CYAN}正在替换二进制文件...${NC}"
+    mv -f "$TEMP_DIR/usr/bin/sing-box" "$BIN_PATH"
+    chmod 755 "$BIN_PATH"
+
+    # 清理临时文件
+    rm -rf "$TEMP_DIR"/*
+    return 0
 }
+
 
 # 主程序
 main() {
