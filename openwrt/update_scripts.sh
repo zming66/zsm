@@ -1,183 +1,185 @@
-#!/bin/bash
+#!/bin/sh
+# OpenWrt sing-box 更新修复版脚本
 
-# 定义颜色
+# =====================
+# 配置区（按需修改）
+# =====================
+REPO="SagerNet/sing-box"
+BIN_PATH="/usr/bin/sing-box"
+TEMP_DIR="/tmp/sing-box_update"
+BACKUP_DIR="/etc/sing-box/backup"
+MAX_RETRY=3  # 下载最大重试次数
+
+# =====================
+# 颜色定义
+# =====================
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 RED='\033[0;31m'
-NC='\033[0m' # 无颜色
+NC='\033[0m'
 
-# 脚本下载目录
-SCRIPT_DIR="/etc/sing-box/scripts"
-TEMP_DIR="/tmp/sing-box"
+# =====================
+# 依赖检查
+# =====================
+check_dependencies() {
+  for cmd in jq uclient-fetch opkg; do
+    if ! command -v $cmd >/dev/null; then
+      echo -e "${RED}错误：缺少必要依赖 $cmd${NC}"
+      exit 1
+    fi
+  done
+}
 
-# 脚本的URL基础路径
-BASE_URL="https://raw.githubusercontent.com/zming66/zsm/refs/heads/main/openwrt"
+# =====================
+# 增强版架构检测
+# =====================
+determine_arch() {
+  case $(uname -m) in
+    x86_64)  echo "x86_64" ;;
+    aarch64) echo "arm64"  ;;
+    armv7l)  echo "armv7"  ;;
+    *)       echo "$(uname -m)" ;;
+  esac
+}
 
-# 初始下载菜单脚本的URL
-MENU_SCRIPT_URL="$BASE_URL/menu.sh"
-
-# 提示用户正在检测版本
-echo -e "${CYAN}正在检测版本，请耐心等待...${NC}"
-
-# 确保脚本目录和临时目录存在并设置权限
-mkdir -p "$SCRIPT_DIR"
-mkdir -p "$TEMP_DIR"
-chown "$(id -u)":"$(id -g)" "$SCRIPT_DIR"
-chown "$(id -u)":"$(id -g)" "$TEMP_DIR"
-
-# 下载远程脚本到临时目录
-wget -q -O "$TEMP_DIR/menu.sh" "$MENU_SCRIPT_URL"
-
-# 检查下载是否成功
-if ! [ -f "$TEMP_DIR/menu.sh" ]; then
-    echo -e "${RED}下载远程脚本失败，请检查网络连接。${NC}"
+# =====================
+# 智能版本获取
+# =====================
+get_latest_versions() {
+  releases=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" || {
+    echo -e "${RED}错误：无法获取版本信息${NC}"
     exit 1
-fi
+  })
+  
+  stable=$(echo "$releases" | jq -r '[.[] | select(.prerelease == false)][0].tag_name')
+  beta=$(echo "$releases" | jq -r '[.[] | select(.prerelease == true)][0].tag_name')
+  
+  echo "$stable $beta"
+}
 
-# 获取本地和远程脚本版本
-LOCAL_VERSION=$(grep '^# 版本:' "$SCRIPT_DIR/menu.sh" | awk '{print $3}')
-REMOTE_VERSION=$(grep '^# 版本:' "$TEMP_DIR/menu.sh" | awk '{print $3}')
+# =====================
+# 增强安装逻辑
+# =====================
+install_version() {
+  version=$1
+  [ -z "$version" ] && return 1
 
-# 检查远程版本是否为空
-if [ -z "$REMOTE_VERSION" ]; then
-    echo -e "${RED}远程版本获取失败，请检查网络连接。${NC}"
-    read -rp "是否重试？(y/n): " retry_choice
-    if [[ "$retry_choice" =~ ^[Yy]$ ]]; then
-        wget -q -O "$TEMP_DIR/menu.sh" "$MENU_SCRIPT_URL"
-        REMOTE_VERSION=$(grep '^# 版本:' "$TEMP_DIR/menu.sh" | awk '{print $3}')
-        if [ -z "$REMOTE_VERSION" ]; then
-            echo -e "${RED}远程版本获取失败，请检查网络连接后再试。返回菜单。${NC}"
-            rm -rf "$TEMP_DIR"
-            exit 1
-        fi
-    else
-        echo -e "${RED}请检查网络连接后再试。返回菜单。${NC}"
-        rm -rf "$TEMP_DIR"
-        exit 1
-    fi
-fi
+  # 架构处理
+  arch=$(determine_arch)
+  case $arch in
+    x86_64) search_arch="x86_64" ;;
+    arm64)  search_arch="arm64"  ;;
+    *)      search_arch="$arch"  ;;
+  esac
 
-# 输出检测到的版本
-echo -e "${CYAN}检测到的版本：本地版本 $LOCAL_VERSION, 远程版本 $REMOTE_VERSION${NC}"
+  # 获取下载链接
+  ipk_url=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" | \
+    jq -r --arg ver "$version" --arg arch "$search_arch" \
+    '.[] | select(.tag_name == $ver).assets[] | 
+    select(.name | contains("openwrt") and contains($arch) and endswith(".ipk")).browser_download_url')
 
-# 比较版本号
-if [ "$LOCAL_VERSION" == "$REMOTE_VERSION" ]; then
-    echo -e "${GREEN}脚本版本为最新，无需升级。${NC}"
-    read -rp "是否强制更新？(y/n): " force_update
-    if [[ "$force_update" =~ ^[Yy]$ ]]; then
-        echo -e "${CYAN}正在强制更新...${NC}"
-    else
-        echo -e "${CYAN}返回菜单。${NC}"
-        rm -rf "$TEMP_DIR"
-        exit 0
-    fi
-else
-    echo -e "${RED}检测到新版本，准备升级。${NC}"
-fi
-
-# 脚本列表
-SCRIPTS=(
-    "check_environment.sh"
-    "install_singbox.sh"
-    "manual_input.sh"
-    "manual_update.sh"
-    "auto_update.sh"
-    "configure_tproxy.sh"
-    "configure_tun.sh"
-    "start_singbox.sh"
-    "stop_singbox.sh"
-    "clean_nft.sh"
-    "set_defaults.sh"
-    "commands.sh"
-    "switch_mode.sh"
-    "manage_autostart.sh"
-    "check_config.sh"
-    "update_singbox.sh"
-    "update_scripts.sh"
-    "update_ui.sh"
-    "menu.sh"
-)
-
-# 下载并设置单个脚本，带重试逻辑
-download_script() {
-    local SCRIPT="$1"
-    local RETRIES=3
-    local RETRY_DELAY=5
-
-    for ((i=1; i<=RETRIES; i++)); do
-        if wget -q -O "$SCRIPT_DIR/$SCRIPT" "$BASE_URL/$SCRIPT"; then
-            chmod +x "$SCRIPT_DIR/$SCRIPT"
-            return 0
-        else
-            sleep "$RETRY_DELAY"
-        fi
-    done
-
-    echo -e "${RED}下载 $SCRIPT 失败，请检查网络连接。${NC}"
+  [ -z "$ipk_url" ] && {
+    echo -e "${RED}未找到 $version 的IPK文件${NC}"
     return 1
+  }
+
+  # 服务管理增强
+  if [ -f "/etc/init.d/sing-box" ]; then
+    echo -e "${CYAN}停止运行中的服务...${NC}"
+    /etc/init.d/sing-box stop || echo -e "${YELLOW}服务停止失败，继续安装${NC}"
+  else
+    echo -e "${YELLOW}未找到服务文件，跳过停止服务步骤${NC}"
+  fi
+
+  # 下载重试机制
+  mkdir -p "$TEMP_DIR"
+  retry=0
+  while [ $retry -lt $MAX_RETRY ]; do
+    echo -e "${CYAN}正在下载: ${GREEN}$(basename "$ipk_url")${NC} (尝试: $((retry+1))/$MAX_RETRY)"
+    if uclient-fetch -qO "$TEMP_DIR/sing-box.ipk" "$ipk_url"; then
+      break
+    else
+      retry=$((retry+1))
+      sleep 3
+    fi
+  done
+  [ $retry -eq $MAX_RETRY ] && {
+    echo -e "${RED}下载失败，请检查网络连接${NC}"
+    return 1
+  }
+
+  # 备份增强
+  [ -f "$BIN_PATH" ] && {
+    backup_file="$BACKUP_DIR/sing-box_$(date +%Y%m%d%H%M%S).bak"
+    mkdir -p "$BACKUP_DIR"
+    cp "$BIN_PATH" "$backup_file"
+    echo -e "${CYAN}已备份旧版本至: ${YELLOW}$backup_file${NC}"
+  }
+
+  # 安装流程
+  echo -e "${CYAN}开始安装操作...${NC}"
+  opkg remove sing-box >/dev/null 2>&1
+  if opkg install --force-reinstall "$TEMP_DIR/sing-box.ipk"; then
+    echo -e "${GREEN}✓ 安装成功${NC}"
+    # 版本验证
+    new_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
+    if [ "$new_ver" = "$version" ]; then
+      echo -e "${GREEN}当前版本: $new_ver${NC}"
+    else
+      echo -e "${YELLOW}版本验证异常，请手动确认${NC}"
+    fi
+  else
+    echo -e "${RED}✗ 安装失败${NC}"
+    return 1
+  fi
+
+  # 服务启动增强
+  if [ -f "/etc/init.d/sing-box" ]; then
+    echo -e "${CYAN}启动服务...${NC}"
+    /etc/init.d/sing-box start || echo -e "${RED}服务启动失败，请手动检查${NC}"
+  fi
 }
 
-# 并行下载脚本
-parallel_download_scripts() {
-    local pids=()
-    for SCRIPT in "${SCRIPTS[@]}"; do
-        download_script "$SCRIPT" &
-        pids+=("$!")
-    done
-
-    for pid in "${pids[@]}"; do
-        wait "$pid"
-    done
+# =====================
+# 交互界面优化
+# =====================
+show_menu() {
+  clear
+  current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
+  IFS=' ' read -r stable_ver beta_ver <<< "$(get_latest_versions)"
+  
+  echo -e "\n${CYAN}======= Sing-box 更新助手 =======${NC}"
+  echo -e "[当前版本] ${GREEN}${current_ver:-未安装}${NC}"
+  echo -e "\n${CYAN}可用版本：${NC}"
+  echo -e "1) ${GREEN}稳定版: $stable_ver${NC}"
+  echo -e "2) ${YELLOW}测试版: $beta_ver${NC}"
+  echo -e "\nq) 退出"
+  
+  echo -ne "\n${CYAN}请选择 (1/2/q): ${NC}"
+  read -r choice
+  
+  case $choice in
+    1) install_version "$stable_ver" ;;
+    2) install_version "$beta_ver" ;;
+    q) exit 0 ;;
+    *) 
+      echo -e "${RED}无效输入，请重新选择${NC}"
+      sleep 1
+      show_menu
+      ;;
+  esac
 }
 
-# 常规更新
-function regular_update() {
-    echo -e "${CYAN}正在清理缓存，请耐心等待...${NC}"
-    rm -f "$SCRIPT_DIR"/*.sh
-    echo -e "${CYAN}正在进行常规更新，请耐心等待...${NC}"
-    parallel_download_scripts
-    echo -e "${CYAN}脚本常规更新完成。${NC}"
+# =====================
+# 主程序
+# =====================
+singbox() {
+  check_dependencies
+  mkdir -p "$TEMP_DIR" "$BACKUP_DIR"
+  chmod 755 "$TEMP_DIR"  # 确保临时目录权限
+  show_menu
+  rm -rf "$TEMP_DIR"
 }
 
-# 重置更新
-function reset_update() {
-    echo -e "${RED}即将停止 sing-box 并重置所有内容，请稍候...${NC}"
-    bash "$SCRIPT_DIR/clean_nft.sh"
-    rm -rf /etc/sing-box
-    echo -e "${CYAN}sing-box 文件夹已删除。${NC}"
-    echo -e "${CYAN}正在重新拉取脚本，请耐心等待...${NC}"
-    bash <(curl -s "$MENU_SCRIPT_URL")
-}
-
-# 提示用户并确认选择
-echo -e "${CYAN}请选择更新方式：${NC}"
-echo -e "${GREEN}1. 常规更新${NC}"
-echo -e "${GREEN}2. 重置更新${NC}"
-read -rp "请选择操作: " update_choice
-
-case $update_choice in
-    1)
-        echo -e "${RED}常规更新只更新脚本内容, 再次执行菜单内容才会执行新脚本。${NC}"
-        read -rp "是否继续常规更新？(y/n): " confirm
-        if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            regular_update
-        else
-            echo -e "${CYAN}常规更新已取消。${NC}"
-        fi
-        ;;
-    2)
-        echo -e "${RED}即将停止 sing-box 并重置所有内容, 并初始化引导设置。${NC}"
-        read -rp "是否继续重置更新？(y/n): " confirm
-        if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            reset_update
-        else
-            echo -e "${CYAN}重置更新已取消。${NC}"
-        fi
-        ;;
-    *)
-        echo -e "${RED}无效的选择。${NC}"
-        ;;
-esac
-
-# 清理临时目录
-rm -rf "$TEMP_DIR"
+singbox
