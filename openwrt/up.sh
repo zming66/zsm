@@ -99,7 +99,7 @@ replace_binary() {
 
 
 # 主程序
-main() {
+Update_sing-box() {
     while :; do
         show_menu
         echo -ne "\n${CYAN}输入版本序号 (s-稳定版/b-测试版/q退出): ${NC}"
@@ -138,4 +138,4 @@ main() {
     done
 }
 
-main
+Update_sing-box
