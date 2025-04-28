@@ -169,6 +169,7 @@ show_menu() {
     echo -e "${GREEN}8. 常用命令${NC}"
     echo -e "${GREEN}9. 更新脚本${NC}"
     echo -e "${GREEN}10. 更新控制面板${NC}"
+    echo -e "${GREEN}11. 更新sing-box${NC}"
     echo -e "${GREEN}0. 退出${NC}"
     echo -e "${CYAN}=======================================${NC}"
 }
@@ -207,6 +208,9 @@ handle_choice() {
             ;;
         10)
             bash "$SCRIPT_DIR/update_ui.sh"
+            ;;
+        11）
+            bash "$SCRIPT_DIR/update_sing-box.sh"
             ;;
         0)
             exit 0
