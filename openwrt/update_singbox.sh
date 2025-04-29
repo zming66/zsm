@@ -1,14 +1,15 @@
 #!/bin/sh
-# OpenWrt sing-box 安全更新脚本（无防火墙检查版）
+# OpenWrt sing-box 自动更新脚本（含智能清理）
 
 # =====================
-# 配置区
+# 配置区（按需修改）
 # =====================
-REPO="SagerNet/sing-box"
-BIN_PATH="/usr/bin/sing-box"
-TEMP_DIR="/tmp/sing-box_update"
-BACKUP_DIR="/etc/sing-box/backup"
-MAX_RETRY=3
+REPO="SagerNet/sing-box"         # GitHub仓库
+BIN_PATH="/usr/bin/sing-box"     # 可执行文件路径
+TEMP_DIR="/tmp/sing-box_update"  # 临时目录
+BACKUP_DIR="/etc/sing-box/backup" # 备份目录
+MAX_RETRY=3                      # 下载最大重试次数
+KEEP_BACKUPS=1                   # 保留的旧备份数量
 
 # =====================
 # 颜色定义
@@ -24,10 +25,10 @@ NC='\033[0m'
 # =====================
 check_dependencies() {
   for cmd in jq uclient-fetch opkg; do
-    command -v $cmd >/dev/null || {
-      echo -e "${RED}错误：缺少依赖 $cmd${NC}"
+    if ! command -v $cmd >/dev/null; then
+      echo -e "${RED}错误：缺少必要依赖 $cmd${NC}"
       exit 1
-    }
+    fi
   done
 }
 
@@ -44,7 +45,7 @@ determine_arch() {
 }
 
 # =====================
-# 智能版本获取
+# 获取最新版本
 # =====================
 get_latest_versions() {
   releases=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" || {
@@ -59,7 +60,28 @@ get_latest_versions() {
 }
 
 # =====================
-# 安全安装流程
+# 清理旧备份
+# =====================
+clean_old_backups() {
+  echo -e "${CYAN}正在清理旧备份...${NC}"
+  # 获取按时间倒序的备份列表
+  backup_files=$(ls -t "$BACKUP_DIR"/sing-box_*.bak 2>/dev/null)
+  
+  # 计算需要删除的数量
+  total=$(echo "$backup_files" | wc -w)
+  if [ $total -gt $KEEP_BACKUPS ]; then
+    to_delete=$((total - KEEP_BACKUPS))
+    echo "$backup_files" | tail -n $to_delete | while read -r file; do
+      echo -e "删除旧备份: ${YELLOW}$(basename "$file")${NC}"
+      rm -f "$file"
+    done
+  else
+    echo -e "${GREEN}当前备份数 $total ≤ 保留数 $KEEP_BACKUPS，无需清理${NC}"
+  fi
+}
+
+# =====================
+# 安装流程核心
 # =====================
 install_version() {
   version=$1
@@ -106,6 +128,8 @@ install_version() {
   if [ -f "/etc/init.d/sing-box" ]; then
     echo -e "${CYAN}停止服务...${NC}"
     /etc/init.d/sing-box stop || echo -e "${YELLOW}服务停止失败，继续安装${NC}"
+  else
+    echo -e "${YELLOW}未找到服务文件，跳过停止${NC}"
   fi
 
   # 备份旧版
@@ -113,7 +137,8 @@ install_version() {
     backup_file="$BACKUP_DIR/sing-box_$(date +%Y%m%d%H%M%S).bak"
     mkdir -p "$BACKUP_DIR"
     cp "$BIN_PATH" "$backup_file"
-    echo -e "${CYAN}已备份: ${YELLOW}$backup_file${NC}"
+    echo -e "${CYAN}已备份: ${YELLOW}$(basename "$backup_file")${NC}"
+    clean_old_backups
   }
 
   # 安装流程
@@ -122,20 +147,17 @@ install_version() {
   if opkg install --force-reinstall "$TEMP_DIR/sing-box.ipk"; then
     echo -e "${GREEN}✓ 安装成功${NC}"
 
-    # 清理opkg备份文件
+    # 清理冲突文件
     CONFIG_BACKUPS=(
       "/etc/init.d/sing-box-opkg"
       "/etc/sing-box/config.json-opkg"
     )
-    for backup_file in "${CONFIG_BACKUPS[@]}"; do
-      [ -f "$backup_file" ] && rm -f "$backup_file"
+    for file in "${CONFIG_BACKUPS[@]}"; do
+      [ -f "$file" ] && {
+        echo -e "${CYAN}清理残留: ${YELLOW}$(basename "$file")${NC}"
+        rm -f "$file"
+      }
     done
-
-    # 配置文件处理
-    if [ -f "/etc/sing-box/config.json-opkg" ]; then
-      echo -e "${YELLOW}检测到配置文件冲突，自动保留当前配置${NC}"
-      rm -f "/etc/sing-box/config.json-opkg"
-    fi
 
     # 版本验证
     new_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
@@ -165,8 +187,8 @@ show_menu() {
   current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
   IFS=' ' read -r stable_ver beta_ver <<< "$(get_latest_versions)"
   
-  echo -e "\n${CYAN}=== Sing-box 更新助手 ==="
-  echo -e "当前版本: ${GREEN}${current_ver:-未安装}${NC}"
+  echo -e "\n${CYAN}======= Sing-box 更新助手 ======="
+  echo -e "[当前版本] ${GREEN}${current_ver:-未安装}${NC}"
   echo -e "\n${CYAN}1) 稳定版: $stable_ver"
   echo -e "2) 测试版: $beta_ver${NC}"
   echo -e "\n${YELLOW}0) 退出${NC}"
