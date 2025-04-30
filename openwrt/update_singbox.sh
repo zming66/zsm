@@ -105,6 +105,17 @@ install_version() {
     rm -f "/etc/init.d/sing-box-opkg" \
         "/etc/sing-box/config.json-opkg" \
         "$TEMP_DIR/sing-box.ipk"
+
+    # 启用并启动服务
+        /etc/init.d/sing-box enable
+        /etc/init.d/sing-box start
+        cmd_status=$?
+
+        if [ "$cmd_status" -eq 0 ]; then
+            echo -e "${GREEN}自启动已成功启用。${NC}"
+        else
+            echo -e "${RED}启用自启动失败。${NC}"
+        fi
     
     # 启动服务
     [ -f "/etc/init.d/sing-box" ] && {
