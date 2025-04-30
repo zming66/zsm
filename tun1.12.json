@@ -2,7 +2,7 @@
   "log": {
     "disabled": false,
     "level": "error",
-    "timestamp": false
+    "timestamp": true
   },
   "experimental": {
     "clash_api": {
