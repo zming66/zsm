@@ -6,10 +6,6 @@ DOMAIN-SUFFIX,time.windows.com
 DOMAIN-SUFFIX,lanzov.com
 DOMAIN-SUFFIX,smtp.qq.com
 DOMAIN-SUFFIX,cn.bing.com
-DOMAIN-SUFFIX,upgrade.mikrotik.ltd
-DOMAIN-SUFFIX,apple.com
-DOMAIN-SUFFIX,icloud.com
-DOMAIN-SUFFIX,downloads.immortalwrt.org
 DOMAIN-SUFFIX,ming.us.kg
 
 # 域名关键字匹配
