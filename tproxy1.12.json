@@ -46,8 +46,17 @@
     "type": "tproxy",
     "tag": "tproxy-in",
     "listen": "0.0.0.0",
-    "listen_port": 7895
-   }
+    "listen_port": 7895,
+    "sniff": true
+   },
+  {
+    "tag": "mixed-in",
+    "type": "mixed",
+    "listen": "0.0.0.0",
+    "listen_port": 7900,
+    "udp_timeout": 180,
+    "sniff": true
+  }
   ],
   
    "outbounds": [
@@ -87,7 +96,7 @@
           "final": "🐠 漏网之鱼",
           "default_mark": 666,
       "rules": [
-        { "action": "sniff"},
+        { "inbound": ["tun-in", "mixed-in"],"action": "sniff"},
         { "protocol": "dns", "action": "hijack-dns"},
         { "rule_set": "AD","clash_mode": "rule","action": "reject"},
         { "action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
