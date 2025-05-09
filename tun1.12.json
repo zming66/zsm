@@ -46,7 +46,7 @@
         "server": "google",
         "client_subnet": "222.172.200.68"
       },
-     {"query_type": ["A","AAAA"],"server": "fakeip"}
+     {"query_type": "A","server": "fakeip"}
    ],
     "cache_capacity": 2048,
     "independent_cache": true,
