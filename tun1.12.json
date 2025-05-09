@@ -34,7 +34,7 @@
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
      {"rule_set": "geosite-cn","server": "local"},
-     {"rule_set": "geosite-geolocation-!cn","server": "google"}],
+     {"rule_set": "geosite-geolocation-!cn","server": "google","client_subnet": "202.45.84.58","strategy": "ipv4_only"}],
     "cache_capacity": 2048,
     "independent_cache": true,
     "final": "google",
@@ -101,6 +101,7 @@
           "default_domain_resolver": {"server": "local"},
           "auto_detect_interface": true,
           "final": "🐠 漏网之鱼",
+          "client_subnet": "222.172.200.68",
       "rules": [
         { "inbound": "tun-in","action": "sniff"},
         { "protocol": "dns","action": "hijack-dns"},
