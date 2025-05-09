@@ -48,7 +48,6 @@
       },
      {"query_type": "A","server": "fakeip"}
    ],
-    "action": "route",
     "cache_capacity": 2048,
     "independent_cache": true,
     "final": "google",
