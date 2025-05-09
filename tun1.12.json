@@ -50,7 +50,7 @@
    ],
     "cache_capacity": 2048,
     "independent_cache": true,
-    "final": "fakeip",
+    "final": "google",
     "strategy": "prefer_ipv4"
   },
   
