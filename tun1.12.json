@@ -34,7 +34,7 @@
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
      {"rule_set": "geosite-cn","server": "local"},
-     {"rule_set": "geosite-geolocation-!cn","server": "google","strategy": "ipv4_only","client_subnet": "202.45.84.58",}],
+     {"rule_set": "geosite-geolocation-!cn","server": "google","strategy": "ipv4_only"}],
     "cache_capacity": 2048,
     "independent_cache": true,
     "final": "google",
