@@ -34,7 +34,9 @@
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
      {"rule_set": "geosite-cn","server": "local"},
-     {"rule_set": "geosite-geolocation-!cn","server": "google","strategy": "ipv4_only"}],
+     {"type": "logical","mode": "and","rules": [{"rule_set": "geosite-geolocation-!cn","invert": true},{"rule_set": "geoip-cn"}],"server": "google","client_subnet": "114.114.114.114/24"},
+     {"query_type": ["A","AAAA"],"server": "fakeip"}
+    ],
     "cache_capacity": 2048,
     "independent_cache": true,
     "final": "google",
@@ -102,8 +104,8 @@
           "auto_detect_interface": true,
           "final": "🐠 漏网之鱼",
       "rules": [
-        { "inbound": "tun-in","action": "sniff"},
-        { "protocol": "dns","action": "hijack-dns"},
+        { "inbound": "tun-in", "action": "sniff"},
+        { "type": "logical", "mode": "or", "rules":[{ "port":53},{ "protocol": "dns"} ], "action": "hijack-dns" },
         { "rule_set": "AD","clash_mode": "rule","action": "reject"},
         { "action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
         { "action": "route", "clash_mode": "global", "outbound": "♻️ 自动选择" },
