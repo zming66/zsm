@@ -119,7 +119,7 @@
         { "rule_set": ["geoip-google", "geosite-google"], "outbound": "🍀 Google" },
         { "rule_set": "geosite-microsoft", "outbound": "🪟 Microsoft" }, 
         { "rule_set": "geosite-tiktok", "outbound": "🎵 TikTok" },
-        { "rule_set": ["geoip-apple", "geosite-apple"], "outbound": "🍏 Apple" },
+        { "rule_set": "geosite-apple", "outbound": "🍏 Apple" },
         { "rule_set": ["geoip-telegram", "geosite-telegram"], "outbound": "📲 Telegram" },
         { "rule_set": "geosite-geolocation-!cn", "outbound": "🛩 国外IP" },
         { "rule_set": ["geoip-cn", "geosite-cn"], "outbound": "🎯 全球直连" }
@@ -145,7 +145,6 @@
         { "tag": "geosite-private", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/private.srs", "download_detour": "🚀 节点选择" },
         { "tag": "geoip-google", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/google.srs", "download_detour": "🚀 节点选择" },
         { "tag": "geoip-telegram", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/telegram.srs", "download_detour": "🚀 节点选择" },     
-        { "tag": "geoip-apple", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geoip/apple.srs", "download_detour": "🚀 节点选择" },
         { "tag": "geoip-cn", "type": "remote", "format": "binary", "update_interval": "1d", "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/cn.srs", "download_detour": "🚀 节点选择" }
       ]
     }
