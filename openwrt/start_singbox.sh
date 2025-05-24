@@ -7,25 +7,12 @@ MAGENTA='\033[0;35m'
 RED='\033[0;31m'
 NC='\033[0m' # 无颜色
 
-# 脚本下载目录
-SCRIPT_DIR="/etc/sing-box/scripts"
-
 # 检查当前模式
 check_mode() {
     if nft list chain inet sing-box prerouting_tproxy &>/dev/null || nft list chain inet sing-box output_tproxy &>/dev/null; then
         echo "TProxy 模式"
     else
         echo "TUN 模式"
-    fi
-}
-
-# 应用防火墙规则
-apply_firewall() {
-    MODE=$(grep -E '^MODE=' /etc/sing-box/mode.conf | sed 's/^MODE=//')
-    if [ "$MODE" = "TProxy" ]; then
-        bash "$SCRIPT_DIR/configure_tproxy.sh"
-    elif [ "$MODE" = "TUN" ]; then
-        bash "$SCRIPT_DIR/configure_tun.sh"
     fi
 }
 
