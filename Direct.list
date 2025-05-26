@@ -10,7 +10,8 @@ DOMAIN-SUFFIX,ming.us.kg
 DOMAIN-SUFFIX,us.kg
 DOMAIN-SUFFIX,upgrade.mikrotik.ltd
 # 域名关键字匹配
-#DOMAIN-KEYWORD,baidu
+DOMAIN-KEYWORD,baidu
+DOMAIN-KEYWORD,zsm.us.kg
 
 # IP段匹配
 
