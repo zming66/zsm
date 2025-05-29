@@ -17,6 +17,7 @@
     "enabled": true,
     "path": "/etc/sing-box/cache.db",
     "store_fakeip": true,
+    "rdrc_timeout": "1d",
     "store_rdrc": true
     }
   },
