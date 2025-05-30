@@ -34,7 +34,7 @@
    [ 
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
-     {"rule_set": "geosite-cn","server": "local"},
+     {"rule_set": ["geosite-cn,direct1"],"server": "local"},
      {"type": "logical","mode": "and","rules": [{"rule_set": "geosite-geolocation-!cn","invert": true},{"rule_set": "geoip-cn"}],"server": "google","client_subnet": "222.172.200.68"},
      {"query_type": ["A","AAAA"],"server": "fakeip"}
     ],
