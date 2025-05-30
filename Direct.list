@@ -9,6 +9,7 @@ DOMAIN-SUFFIX,cn.bing.com
 DOMAIN-SUFFIX,ming.us.kg
 DOMAIN-SUFFIX,us.kg
 DOMAIN-SUFFIX,upgrade.mikrotik.ltd
+DOMAIN-SUFFIX,pool.ntp.org
 # 域名关键字匹配
 DOMAIN-KEYWORD,baidu
 DOMAIN-KEYWORD,zsm.us.kg
