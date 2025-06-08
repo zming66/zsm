@@ -5,20 +5,20 @@
     /ipv6 firewall address-list remove [find where list~"CN_IP"];
     
     # 下载中国IPv4列表 (含10.10.10.0/24)
-    /tool fetch url="https://api.ispip.com/all_cn_cidr.txt" dst-path="cn_ipv4.txt";
+    /tool fetch url="http://www.iwik.org/ipcountry/CN.cidr" dst-path="cn_ipv4.txt";
     /file set "cn_ipv4.txt" contents=("10.10.10.0/24\\n" . [get "cn_ipv4.txt" contents]);
     
     # 导入IPv4地址列表
     :foreach line in=[/file get cn_ipv4.txt contents] do={
-        /ip firewall address-list add list="CN_IPv4" address=$line;
+        /ip firewall address-list add list="CN" address=$line;
     }
     
     # 下载中国IPv6列表
-    /tool fetch url="https://api.ispip.com/all_cn_ipv6_cidr.txt" dst-path="cn_ipv6.txt";
+    /tool fetch url="http://www.iwik.org/ipcountry/CN.ipv6" dst-path="cn_ipv6.txt";
     
     # 导入IPv6地址列表
     :foreach line in=[/file get cn_ipv6.txt contents] do={
-        /ipv6 firewall address-list add list="CN_IPv6" address=$line;
+        /ipv6 firewall address-list add list="CN" address=$line;
     }
     
     # 清理临时文件
