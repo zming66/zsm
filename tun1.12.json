@@ -34,7 +34,7 @@
    [ 
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
-     {"rule_set": ["geosite-cn", "direct1","geosite-microsoft-cn","geosite-apple-cn"],"server": "local"},
+     {"rule_set": "geosite-cn","server": "local"},
      {"rule_set": "geosite-geolocation-!cn","server": "google"}
     ],
     "cache_capacity": 2048,
