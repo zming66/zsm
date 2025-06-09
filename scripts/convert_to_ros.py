@@ -1,7 +1,9 @@
- re
+import os
 from datetime import datetime
 
 def convert_format():
+    os.makedirs('outputs', exist_ok=True)
+    
     with open('data/raw_ipv6.txt') as f:
         lines = f.read().splitlines()
     
@@ -13,7 +15,7 @@ def convert_format():
     ]
     
     for line in lines:
-        if '::' in line:  # IPv6格式校验
+        if '::' in line or '|' in line:
             cidr = line.split('|')[-1] if '|' in line else line.strip()
             ros_rules.append(f'add address={cidr} list=CN_IPv6 comment="Auto-generated"')
     
