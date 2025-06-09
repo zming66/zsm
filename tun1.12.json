@@ -35,7 +35,8 @@
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
      {"rule_set": ["geosite-cn", "direct1","geosite-microsoft-cn","geosite-apple-cn"],"server": "local"},
-     {"rule_set": "geosite-geolocation-!cn","server": "google"}
+     {"type": "logical","mode": "and","rules": [{"rule_set": "geosite-geolocation-!cn","invert": true},{"rule_set": "geoip-cn"}],"server": "google","client_subnet": "222.172.200.68"},
+     {"query_type": ["A","AAAA"],"server": "fakeip"}
      ],
     "cache_capacity": 2048,
     "independent_cache": true,
@@ -97,6 +98,7 @@
       { "tag": "🇲🇾 马来西亚自动", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇲🇾|马来西亚|MY|M|Malaysia"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
       { "tag": "🇺🇲 美国自动", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇺🇸|US|us|美国|美|United States"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
       { "tag": "♻️ 自动选择", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "exclude", "keywords": ["网|地址|剩余|过期|时间|有效"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
+      { "tag": "Global", "type": "selector", "outbounds": ["{all}"], "filter": [{ "action": "exclude", "keywords": ["网|地址|剩余|过期|时间|有效"] }] },
       { "tag": "🎯 全球直连", "type": "direct" }
     ],
   "route": {
@@ -105,10 +107,10 @@
           "final": "🐠 漏网之鱼",
       "rules": [
         { "inbound": "tun-in", "action": "sniff"},
-        { "protocol": "dns", "action": "hijack-dns"},
+        { "type": "logical", "mode": "or", "rules":[{ "port":53},{ "protocol": "dns"} ], "action": "hijack-dns" },
         { "rule_set": "AD","clash_mode": "rule","action": "reject"},
         { "action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
-        { "action": "route", "clash_mode": "global", "outbound": "♻️ 自动选择" },
+        { "action": "route", "clash_mode": "global", "outbound": "Global" },
         { "domain": ["clash.razord.top", "yacd.metacubex.one", "yacd.haishan.me", "d.metacubex.one"], "outbound": "🎯 全球直连" },
         { "ip_is_private": true,"outbound": "🎯 全球直连"},
         { "rule_set": "geosite-private", "outbound": "🎯 全球直连" },
