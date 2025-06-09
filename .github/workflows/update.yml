@@ -20,13 +20,19 @@ jobs:
         with:
           python-version: '3.x'
           
-      - name: Generate RouterOS script
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
+      - name: Generate IPv4 list
+        run: python generate_ipv4_list.py
+        
+      - name: Generate IPv6 list
         run: python generate_ipv6_list.py
         
       - name: Commit changes
         run: |
           git config --local user.email "github-actions@example.com"
           git config --local user.name "GitHub Actions"
-          git add china-ipv6.rsc
-          git commit -am "Update China IPv6 list - $(date +'%Y-%m-%d')"
+          git add china-ipv4.rsc china-ipv6.rsc
+          git commit -am "Update China IP lists - $(date +'%Y-%m-%d')"
           git push
