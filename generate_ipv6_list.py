@@ -21,11 +21,11 @@ def main():
 # 中国IPv6地址列表 - 自动生成 ({datetime.utcnow().strftime('%Y-%m-%d')})
 # 来源: APNIC | 条目数: {len(china_ipv6)}
 ################################################################
-/ipv6 firewall address-list remove [find where list="CN_IPv6"]
+/ipv6 firewall address-list remove [find where list="CN"]
 /ipv6 firewall address-list\n"""
 
     for cidr in china_ipv6:
-        ros_script += f"add address={cidr} list=CN_IPv6\n"
+        ros_script += f"add address={cidr} list=CN\n"
 
     # 保存文件
     with open("china-ipv6.rsc", "w") as f:
