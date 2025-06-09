@@ -1,4 +1,5 @@
- requests
+
+import requests
 import json
 
 def fetch_ipv6_list():
@@ -13,7 +14,8 @@ def fetch_ipv6_list():
                     if 'CN|ipv6' in line]
         with open('data/raw_ipv6.txt', 'w') as f:
             f.write('\n'.join(china_ips))
-    except:
+    except Exception as e:
+        print(f"使用备用数据源，原因：{str(e)}")
         r = requests.get(backup_url)
         with open('data/raw_ipv6.txt', 'w') as f:
             f.write(r.text)
