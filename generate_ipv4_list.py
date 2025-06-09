@@ -66,7 +66,7 @@ def main():
         logger.info(f"合并后剩余 {len(merged_cidrs)} 个CIDR地址段 (减少 {len(all_ranges) - len(merged_cidrs)} 个)")
         
         # 生成 RouterOS 脚本
-        ros_script = f"""/################################################################
+        ros_script = f"""################################################################
 # 中国IPv4地址列表 - 自动生成 ({datetime.utcnow().strftime('%Y-%m-%d')})
 # 来源: APNIC | 原始条目: {len(china_ipv4)} | 自定义条目: {len(custom_ranges)} | 优化后条目: {len(merged_cidrs)}
 ################################################################
