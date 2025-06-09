@@ -40,7 +40,6 @@
   },
   
   "inbounds": [
-  "inbounds": [
     {
       "tag": "tun-in",
       "type": "tun",
