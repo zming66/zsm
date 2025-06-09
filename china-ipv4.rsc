@@ -1,6 +1,6 @@
 /################################################################
 # 中国IPv4地址列表 - 自动生成 (2025-06-09)
-# 来源: APNIC | 原始条目: 8691 | 优化后条目: 5471
+# 来源: APNIC | 原始条目: 8691 | 自定义条目: 2 | 优化后条目: 5473
 ################################################################
 /ip firewall address-list remove [find where list="CN"]
 /ip firewall address-list
@@ -51,6 +51,7 @@ add address=1.188.0.0/14 list=CN
 add address=1.192.0.0/13 list=CN
 add address=1.202.0.0/15 list=CN
 add address=1.204.0.0/14 list=CN
+add address=10.10.10.0/24 list=CN
 add address=14.0.0.0/21 list=CN
 add address=14.0.12.0/22 list=CN
 add address=14.1.0.0/22 list=CN
@@ -3932,6 +3933,7 @@ add address=192.140.160.0/19 list=CN
 add address=192.140.192.0/20 list=CN
 add address=192.140.208.0/21 list=CN
 add address=192.144.128.0/17 list=CN
+add address=192.168.1.0/24 list=CN
 add address=192.197.113.0/24 list=CN
 add address=193.112.0.0/16 list=CN
 add address=193.119.0.0/19 list=CN
@@ -5475,3 +5477,7 @@ add address=223.254.0.0/16 list=CN
 add address=223.255.0.0/17 list=CN
 add address=223.255.236.0/22 list=CN
 add address=223.255.252.0/23 list=CN
+
+# 以下为自定义地址段
+add address=10.10.10.0/24 list=CN comment="Custom Range"
+add address=192.168.1.0/24 list=CN comment="Custom Range"
