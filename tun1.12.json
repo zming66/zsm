@@ -35,8 +35,7 @@
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
      {"rule_set": ["geosite-cn", "direct1","geosite-microsoft-cn","geosite-apple-cn"],"server": "local"},
-     {"type": "logical","mode": "and","rules": [{"rule_set": "geosite-geolocation-!cn","invert": true},{"rule_set": "geoip-cn"}],"server": "google","client_subnet": "222.172.200.68"},
-     {"query_type": ["A","AAAA"],"server": "fakeip"}
+     {"rule_set": "geosite-geolocation-!cn","server": "google"}
     ],
     "cache_capacity": 2048,
     "independent_cache": true,
@@ -106,7 +105,7 @@
           "final": "🐠 漏网之鱼",
       "rules": [
         { "inbound": "tun-in", "action": "sniff"},
-        { "type": "logical", "mode": "or", "rules":[{ "port":53},{ "protocol": "dns"} ], "action": "hijack-dns" },
+        { "protocol": "dns", "action": "hijack-dns"},
         { "rule_set": "AD","clash_mode": "rule","action": "reject"},
         { "action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
         { "action": "route", "clash_mode": "global", "outbound": "♻️ 自动选择" },
