@@ -20,9 +20,12 @@ jobs:
         with:
           python-version: '3.10'
           
+      - name: Create requirements file
+        run: echo "netaddr==0.9.0" > requirements.txt
+          
       - name: Install dependencies
         run: pip install -r requirements.txt
-        
+          
       - name: Generate IPv4 list
         run: python generate_ipv4_list.py
         
