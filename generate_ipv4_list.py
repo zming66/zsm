@@ -37,12 +37,24 @@ def main():
         
         logger.info(f"获取到 {len(china_ipv4)} 个原始IPv4地址段")
         
+        # 添加自定义地址段
+        custom_ranges = [
+            "10.10.10.0/24",   # 示例自定义网络
+            "192.168.1.0/24"   # 示例本地网络
+        ]
+        
+        # 合并所有地址段
+        all_ranges = china_ipv4 + custom_ranges
+        logger.info(f"添加 {len(custom_ranges)} 个自定义地址段，总计 {len(all_ranges)} 个地址段")
+        
         # CIDR 合并优化 (使用标准库方法)
         logger.info("合并CIDR地址段...")
         networks = []
-        for cidr in china_ipv4:
+        for cidr in all_ranges:
             try:
-                networks.append(ipaddress.ip_network(cidr, strict=False))
+                # 标准化CIDR表示
+                network = ipaddress.ip_network(cidr, strict=False)
+                networks.append(network)
             except ValueError as e:
                 logger.warning(f"跳过无效CIDR: {cidr} - {e}")
         
@@ -51,18 +63,23 @@ def main():
         if networks:
             merged_cidrs = list(ipaddress.collapse_addresses(networks))
         
-        logger.info(f"合并后剩余 {len(merged_cidrs)} 个CIDR地址段 (减少 {len(china_ipv4) - len(merged_cidrs)} 个)")
+        logger.info(f"合并后剩余 {len(merged_cidrs)} 个CIDR地址段 (减少 {len(all_ranges) - len(merged_cidrs)} 个)")
         
         # 生成 RouterOS 脚本
         ros_script = f"""/################################################################
 # 中国IPv4地址列表 - 自动生成 ({datetime.utcnow().strftime('%Y-%m-%d')})
-# 来源: APNIC | 原始条目: {len(china_ipv4)} | 优化后条目: {len(merged_cidrs)}
+# 来源: APNIC | 原始条目: {len(china_ipv4)} | 自定义条目: {len(custom_ranges)} | 优化后条目: {len(merged_cidrs)}
 ################################################################
 /ip firewall address-list remove [find where list="CN"]
 /ip firewall address-list\n"""
         
         for cidr in merged_cidrs:
             ros_script += f"add address={cidr} list=CN\n"
+        
+        # 添加注释标记自定义地址段
+        ros_script += "\n# 以下为自定义地址段\n"
+        for custom in custom_ranges:
+            ros_script += f"add address={custom} list=CN comment=\"Custom Range\"\n"
         
         # 保存文件
         output_file = "china-ipv4.rsc"
