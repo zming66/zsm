@@ -1,33 +1,32 @@
-name: Update CN IPv6 List
+name: Update China IPv6 List
+
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 12 * * *'  # 每天UTC时间12:00运行
+  workflow_dispatch:       # 允许手动触发
 
 permissions:
   contents: write
 
 jobs:
-  update:
+  generate-list:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - name: Create directories
-        run: mkdir -p data outputs
-      - name: Install dependencies
-        run: pip install requests
-      - name: Run scripts
-        run: |
-          python scripts/fetch_cnipv6.py
-          python scripts/convert_to_ros.py
+          python-version: '3.x'
+          
+      - name: Generate RouterOS script
+        run: python generate_ipv6_list.py
+        
       - name: Commit changes
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add outputs/cn_ipv6.rsc
-          git commit -m "Auto-update CN IPv6 list $(date +'%Y-%m-%d')"
+          git config --local user.email "github-actions@example.com"
+          git config --local user.name "GitHub Actions"
+          git add china-ipv6.rsc
+          git commit -am "Update China IPv6 list - $(date +'%Y-%m-%d')"
           git push
