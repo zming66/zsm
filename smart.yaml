@@ -79,7 +79,9 @@ dns:
   ipv6: true
   respect-rules: true
   enhanced-mode: fake-ip
-  fake-ip-range: 198.18.0.0/15
+  fake-ip-range: 
+    - 198.18.0.0/15
+    - fcab::/18
   fake-ip-filter-mode: blacklist
   fake-ip-filter:
     - "rule-set:private_domain,cn_domain"
