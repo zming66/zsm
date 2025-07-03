@@ -4,7 +4,7 @@ UI_DIR="/etc/sing-box/ui"
 BACKUP_DIR="/tmp/sing-box/ui_backup"
 TEMP_DIR="/tmp/sing-box-ui"
 
-ZASHBOARD_URL="https://gh-proxy.com/https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip"
+ZASHBOARD_URL="https://gh-proxy.comhttps://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
 METACUBEXD_URL="https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
 YACD_URL="https://gh-proxy.com/https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip"
 
