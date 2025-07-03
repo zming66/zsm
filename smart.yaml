@@ -110,12 +110,12 @@ proxy-groups:
   - {name: 🍎 Apple, type: select, proxies: [直连, 🚀 默认代理]}
   - {name: 🌏 全球直连, type: select, proxies: [直连, 🚀 默认代理]}
   - {name: 🐟 漏网之鱼, <<: *pr}
-  - {name: 🇭🇰 香港智能, type: smart, uselightgbm: false, collectdata: false, interval: 300, include-all: true, filter: "(?=.*(港|HK|(?i)Hong))^((?!(台|日|新|马|美)).)*$"}
-  - {name: 🇹🇼 台湾智能, type: smart, uselightgbm: false, collectdata: false, interval: 300, include-all: true, filter: "(?=.*(台|TW|(?i)Taiwan))^((?!(港|日|新|马|美)).)*$"}
-  - {name: 🇸🇬 新加坡智能, type: smart, uselightgbm: false, collectdata: false, interval: 300, include-all: true, filter: "(?=.*(新|SG|(?i)Singapore))^((?!(台|日|马|港|美)).)*$"}
-  - {name: 🇲🇾 马来西亚智能, type: smart, uselightgbm: false, collectdata: false, interval: 300, include-all: true, filter: "(?=.*(马|MY|(?i)Malaysia))^((?!(港|台|日|新|美)).)*$"}
-  - {name: 🇯🇵 日本智能, type: smart, uselightgbm: false, collectdata: false, interval: 300, include-all: true, filter: "(?=.*(日|JP|(?i)Japan))^((?!(港|台|新|美|马)).)*$" }
-  - {name: 🇺🇲 美国智能, type: smart, uselightgbm: false, collectdata: false, interval: 300, include-all: true, filter: "(?=.*(美|US|(?i)States|America))^((?!(港|台|日|新|马)).)*$"}
+  - {name: 🇭🇰 香港智能, type: smart, uselightgbm: false, collectdata: true, interval: 300, include-all: true, filter: "(?=.*(港|HK|(?i)Hong))^((?!(台|日|新|马|美)).)*$"}
+  - {name: 🇹🇼 台湾智能, type: smart, uselightgbm: false, collectdata: true, interval: 300, include-all: true, filter: "(?=.*(台|TW|(?i)Taiwan))^((?!(港|日|新|马|美)).)*$"}
+  - {name: 🇸🇬 新加坡智能, type: smart, uselightgbm: false, collectdata: true, interval: 300, include-all: true, filter: "(?=.*(新|SG|(?i)Singapore))^((?!(台|日|马|港|美)).)*$"}
+  - {name: 🇲🇾 马来西亚智能, type: smart, uselightgbm: false, collectdata: true, interval: 300, include-all: true, filter: "(?=.*(马|MY|(?i)Malaysia))^((?!(港|台|日|新|美)).)*$"}
+  - {name: 🇯🇵 日本智能, type: smart, uselightgbm: false, collectdata: true, interval: 300, include-all: true, filter: "(?=.*(日|JP|(?i)Japan))^((?!(港|台|新|美|马)).)*$" }
+  - {name: 🇺🇲 美国智能, type: smart, uselightgbm: false, collectdata: true, interval: 300, include-all: true, filter: "(?=.*(美|US|(?i)States|America))^((?!(港|台|日|新|马)).)*$"}
   - {name: ♻️ 自动选择, type: url-test, include-all: true, tolerance: 20, interval: 300, filter: "^((?!(直连)).)*$"}
   - {name: 🌐 全部节点, type: select, include-all: true}
 
