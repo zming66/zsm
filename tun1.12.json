@@ -47,7 +47,7 @@
         "server": "google",
         "client_subnet": "222.172.200.68"
       }
-    ]
+    ],
    "strategy": "prefer_ipv4"
   },
   
