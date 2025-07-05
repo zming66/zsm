@@ -45,7 +45,7 @@
           }
         ],
         "server": "google",
-        "client_subnet": "222.172.200.68" // Any China client IP address
+        "client_subnet": "222.172.200.68"
       }
     ]
   },
