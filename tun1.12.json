@@ -27,11 +27,12 @@
    "servers": 
    [
      {"tag": "local", "type": "udp", "server": "10.10.10.1"},
-     {"tag": "google", "type": "tls", "server": "8.8.8.8", "detour": "🚀 节点选择"},
+     {"tag": "google", "type": "https", "server": "dns.google", "domain_resolver": "local", "detour": "🚀 节点选择"},
      {"tag": "fakeip","type": "fakeip","inet4_range": "198.18.0.0/15","inet6_range": "fcab::/18"}
      ],
    "rules": 
    [ 
+     {"query_type": "HTTPS", "action": "reject"},
      {"clash_mode": "direct","server": "local"},
      {"clash_mode": "global","server": "google"},
      {"rule_set": "geosite-cn","server": "local"},
@@ -98,7 +99,7 @@
           "auto_detect_interface": true,
           "final": "🐠 漏网之鱼",
       "rules": [
-        { "inbound": "tun-in", "action": "sniff"},
+        { "inbound": "tun-in", "action": "sniff", "sniffer": ["http", "tls", "quic", "dns"]},
         { "protocol": "dns", "action": "hijack-dns"},
         { "rule_set": "AD","clash_mode": "rule","action": "reject"},
         { "action": "route", "clash_mode": "direct", "outbound": "🌏 全球直连" },
