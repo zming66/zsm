@@ -1,5 +1,5 @@
 #!/bin/sh
-# OpenWrt sing-box 精简安装脚本（增强版）
+# OpenWrt sing-box 精简安装脚本（增强版 - 修复兜底输出问题）
 
 REPO="SagerNet/sing-box"         # GitHub 仓库
 BIN_PATH="/usr/bin/sing-box"     # 可执行文件路径
@@ -68,11 +68,14 @@ fetch_releases() {
         return
     fi
 
-    # HTML 兜底
+    # HTML 兜底（修复多余输出问题，返回 JSON 格式）
     echo -e "${CYAN}API获取失败，尝试解析GitHub网页...${NC}"
     html=$(fetch_with_retry "https://github.com/$REPO/releases")
     if [ -n "$html" ]; then
-        echo "$html" | grep -oP '(?<=/tag/)[^"]+' | awk '{print "{\"tag_name\":\""$1"\"}"}'
+        ver=$(echo "$html" | grep -oP '(?<=/tag/)[^"]+' | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+        if [ -n "$ver" ]; then
+            echo "[{\"tag_name\":\"$ver\"}]"  # 输出标准 JSON
+        fi
     fi
 }
 
