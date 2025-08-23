@@ -1,5 +1,5 @@
 ################################################################
-# 中国IPv6地址列表 - 自动生成 (2025-08-16)
+# 中国IPv6地址列表 - 自动生成 (2025-08-23)
 # 来源: APNIC | 条目数: 2037
 ################################################################
 /ipv6 firewall address-list remove [find where list="CN"]
@@ -71,7 +71,6 @@ add address=2001:df3:d0c0::/48 list=CN
 add address=2001:df3:d880::/48 list=CN
 add address=2001:df3:ed80::/48 list=CN
 add address=2001:df3:ef80::/48 list=CN
-add address=2001:df4:880::/48 list=CN
 add address=2001:df4:d80::/48 list=CN
 add address=2001:df4:1880::/48 list=CN
 add address=2001:df4:2780::/48 list=CN
@@ -96,6 +95,7 @@ add address=2001:df5:4740::/48 list=CN
 add address=2001:df5:4cc0::/48 list=CN
 add address=2001:df5:5f80::/48 list=CN
 add address=2001:df5:7800::/48 list=CN
+add address=2001:df6:40::/48 list=CN
 add address=2001:df6:100::/48 list=CN
 add address=2001:df6:5d00::/48 list=CN
 add address=2001:df6:6800::/48 list=CN
