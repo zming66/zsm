@@ -9,6 +9,20 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # 无颜色
 
+# URL 编码函数（对整个字符串编码）
+urlencode() {
+    local raw="$1"
+    local length="${#raw}"
+    local i c
+    for (( i = 0; i < length; i++ )); do
+        c="${raw:i:1}"
+        case $c in
+            [a-zA-Z0-9.~_-]) printf '%s' "$c" ;;
+            *) printf '%%%02X' "'$c" ;;
+        esac
+    done
+}
+
 # 读取配置函数
 get_config() {
     local key=$1
@@ -47,8 +61,34 @@ while true; do
             [ -n "$val" ] && set_config BACKEND_URL "$val"
             ;;
         2)
-            read -rp "请输入新的订阅地址: " val
-            [ -n "$val" ] && set_config SUBSCRIPTION_URL "$val"
+            read -rp "是否输入多个订阅地址? (y/n): " multi
+            if [[ "$multi" =~ ^[Yy]$ ]]; then
+                echo "请输入多个订阅地址，每行一个，输入空行结束:"
+                urls=()
+                while true; do
+                    read -rp "> " addr
+                    [ -z "$addr" ] && break
+                    urls+=("$addr")
+                done
+
+                if [ ${#urls[@]} -eq 0 ]; then
+                    echo -e "${RED}未输入任何地址${NC}"
+                else
+                    # 用 | 拼接
+                    combined=$(printf "%s|" "${urls[@]}")
+                    combined=${combined%|}
+                    # 对整串做一次编码（包括 | -> %7C）
+                    encoded_combined=$(urlencode "$combined")
+                    set_config SUBSCRIPTION_URL "$encoded_combined"
+                    echo -e "${GREEN}多地址已编码并更新${NC}"
+                fi
+            else
+                read -rp "请输入新的订阅地址(单地址不编码): " val
+                if [ -n "$val" ]; then
+                    set_config SUBSCRIPTION_URL "$val"
+                    echo -e "${GREEN}单地址已更新（未编码）${NC}"
+                fi
+            fi
             ;;
         3)
             read -rp "请输入新的TProxy配置文件地址: " val
