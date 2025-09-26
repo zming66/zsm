@@ -30,7 +30,7 @@ set_config() {
 # 主菜单循环
 while true; do
     echo -e "${CYAN}============================${NC}"
-    echo -e "${CYAN} 配置管理菜单${NC}"
+    echo -e "${CYAN} 配置订阅菜单${NC}"
     echo -e "${CYAN}============================${NC}"
     echo -e "${GREEN}1) 修改后端地址 ${NC}(当前: $(get_config BACKEND_URL))"
     echo -e "${GREEN}2) 修改订阅地址 ${NC}(当前: $(get_config SUBSCRIPTION_URL))"
