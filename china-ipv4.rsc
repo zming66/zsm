@@ -1,5 +1,5 @@
 ################################################################
-# 中国IPv4地址列表 - 自动生成 (2025-09-27)
+# 中国IPv4地址列表 - 自动生成 (2025-10-04)
 # 来源: APNIC | 原始条目: 8689 | 自定义条目: 2 | 优化后条目: 5474
 ################################################################
 /ip firewall address-list remove [find where list="CN"]
@@ -1665,7 +1665,6 @@ add address=103.90.112.0/20 list=CN
 add address=103.90.128.0/21 list=CN
 add address=103.90.152.0/22 list=CN
 add address=103.90.168.0/22 list=CN
-add address=103.90.173.0/24 list=CN
 add address=103.90.176.0/22 list=CN
 add address=103.90.188.0/22 list=CN
 add address=103.90.192.0/22 list=CN
@@ -3448,6 +3447,7 @@ add address=123.242.0.0/17 list=CN
 add address=123.242.192.0/21 list=CN
 add address=123.244.0.0/14 list=CN
 add address=123.249.0.0/16 list=CN
+add address=123.253.52.0/23 list=CN
 add address=123.254.96.0/21 list=CN
 add address=124.6.64.0/18 list=CN
 add address=124.14.0.0/15 list=CN
@@ -4133,6 +4133,7 @@ add address=202.57.240.0/20 list=CN
 add address=202.58.0.0/24 list=CN
 add address=202.58.104.0/22 list=CN
 add address=202.58.112.0/22 list=CN
+add address=202.58.122.0/23 list=CN
 add address=202.59.0.0/23 list=CN
 add address=202.59.212.0/22 list=CN
 add address=202.59.236.0/24 list=CN
@@ -5269,7 +5270,6 @@ add address=203.160.104.0/21 list=CN
 add address=203.160.129.0/24 list=CN
 add address=203.160.192.0/19 list=CN
 add address=203.161.0.0/22 list=CN
-add address=203.161.180.0/24 list=CN
 add address=203.161.183.0/24 list=CN
 add address=203.161.192.0/19 list=CN
 add address=203.166.160.0/19 list=CN
