@@ -103,7 +103,7 @@
         { "protocol": "dns", "action": "hijack-dns"},
         { "rule_set": "AD","clash_mode": "rule","action": "reject"},
         { "action": "route", "clash_mode": "direct", "outbound": "🌏 全球直连" },
-        { "action": "route", "clash_mode": "global", "outbound": "global" },
+        { "action": "route", "clash_mode": "global", "outbound": "⚙️ 自动选择" },
         { "domain": ["clash.razord.top", "yacd.metacubex.one", "yacd.haishan.me", "d.metacubex.one"], "outbound": "🌏 全球直连" },
         { "ip_is_private": true,"outbound": "🌏 全球直连"},
         { "rule_set": "geosite-private", "outbound": "🌏 全球直连" },
