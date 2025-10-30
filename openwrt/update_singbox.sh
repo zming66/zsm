@@ -1,5 +1,6 @@
 #!/bin/sh
 # OpenWrt sing-box 精简安装脚本
+# 功能：安装/更新 sing-box，支持版本回退，安装前自动清理所有 sing-box 相关包
 
 # =====================
 # 配置区
@@ -38,6 +39,8 @@ determine_arch() {
         x86_64)  echo "x86_64" ;;
         aarch64) echo "arm64"  ;;
         armv7l)  echo "armv7"  ;;
+        mipsel*) echo "mipsel" ;;
+        mips*)   echo "mips"   ;;
         *)       echo "$(uname -m)" ;;
     esac
 }
@@ -76,6 +79,29 @@ fetch_releases() {
 }
 
 # =====================
+# 清理旧版本（支持所有 sing-box 包）
+# =====================
+cleanup_old_version() {
+    pkgs=$(opkg list-installed | awk '{print $1}' | grep '^sing-box')
+    if [ -n "$pkgs" ]; then
+        echo -e "${CYAN}检测到已安装的 sing-box 相关包，正在卸载...${NC}"
+        /etc/init.d/sing-box stop 2>/dev/null || true
+        for pkg in $pkgs; do
+            echo -e "${CYAN}卸载 $pkg ...${NC}"
+            opkg remove --force-removal-of-dependent-packages "$pkg" || true
+        done
+    fi
+    # 删除残留文件
+    rm -f /usr/bin/sing-box /etc/init.d/sing-box
+    if [ ! -f /usr/bin/sing-box ]; then
+        echo -e "${GREEN}✓ 旧版本清理完成${NC}"
+    else
+        echo -e "${RED}✗ 旧版本清理失败${NC}"
+        return 1
+    fi
+}
+
+# =====================
 # 安装流程核心
 # =====================
 install_version() {
@@ -107,8 +133,10 @@ install_version() {
     done
     [ $retry -eq $MAX_RETRY ] && { echo -e "${RED}✗ 下载失败，请检查网络或尝试手动下载${NC}"; return 1; }
 
-    [ -f "/etc/init.d/sing-box" ] && /etc/init.d/sing-box stop
-    opkg remove sing-box >/dev/null 2>&1 || true
+    # 清理旧版本
+    cleanup_old_version || return 1
+
+    # 安装新版本
     if opkg install "$TEMP_DIR/sing-box.ipk"; then
         echo -e "${GREEN}✓ 安装成功${NC}"
         /etc/init.d/sing-box enable
