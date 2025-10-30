@@ -1,6 +1,5 @@
 #!/bin/sh
-# OpenWrt sing-box 精简安装脚本
-# 功能：安装/更新 sing-box，支持版本回退，安装前自动清理所有 sing-box 相关包
+# OpenWrt sing-box 安装/更新脚本
 
 # =====================
 # 配置区
@@ -109,9 +108,8 @@ install_version() {
     releases=$2
     [ -z "$version" ] && { echo -e "${RED}版本号为空${NC}"; return 1; }
 
-    # 记录当前版本号
+    # 记录当前版本号（仅在安装成功后更新）
     current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
-    [ -n "$current_ver" ] && echo "$current_ver" > "$LAST_VER_FILE"
 
     arch=$(determine_arch)
     ipk_url=$(echo "$releases" | jq -r --arg ver "$version" --arg arch "$arch" \
@@ -141,6 +139,8 @@ install_version() {
         echo -e "${GREEN}✓ 安装成功${NC}"
         /etc/init.d/sing-box enable
         /etc/init.d/sing-box start
+        # 安装成功后再更新 last_version
+        [ -n "$current_ver" ] && echo "$current_ver" > "$LAST_VER_FILE"
     else
         echo -e "${RED}✗ 安装失败${NC}"
         return 1
