@@ -1,5 +1,5 @@
 #!/bin/sh
-# OpenWrt sing-box 精简安装脚本（增加版本回退功能）
+# OpenWrt sing-box 精简安装脚本
 
 # =====================
 # 配置区
@@ -80,23 +80,17 @@ fetch_releases() {
 # =====================
 install_version() {
     version=$1
-    [ -z "$version" ] && return 1
+    releases=$2
+    [ -z "$version" ] && { echo -e "${RED}版本号为空${NC}"; return 1; }
 
     # 记录当前版本号
     current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
     [ -n "$current_ver" ] && echo "$current_ver" > "$LAST_VER_FILE"
 
     arch=$(determine_arch)
-    case $arch in
-        x86_64) search_arch="x86_64" ;;
-        arm64)  search_arch="arm64"  ;;
-        *)      search_arch="$arch"  ;;
-    esac
-
-    ipk_url=$(uclient-fetch -qO- "https://api.github.com/repos/$REPO/releases" | \
-        jq -r --arg ver "$version" --arg arch "$search_arch" \
+    ipk_url=$(echo "$releases" | jq -r --arg ver "$version" --arg arch "$arch" \
         '.[] | select(.tag_name == $ver).assets[] |
-         select(.name | contains("openwrt") and contains($arch) and endswith(".ipk")).browser_download_url')
+         select(.name | contains("openwrt") and contains($arch) and endswith(".ipk")).browser_download_url' 2>/dev/null)
 
     [ -z "$ipk_url" ] && { echo -e "${RED}未找到 $version 的IPK文件${NC}"; return 1; }
 
@@ -111,10 +105,10 @@ install_version() {
         retry=$((retry+1))
         sleep 3
     done
-    [ $retry -eq $MAX_RETRY ] && { echo -e "${RED}✗ 下载失败${NC}"; return 1; }
+    [ $retry -eq $MAX_RETRY ] && { echo -e "${RED}✗ 下载失败，请检查网络或尝试手动下载${NC}"; return 1; }
 
     [ -f "/etc/init.d/sing-box" ] && /etc/init.d/sing-box stop
-    opkg remove sing-box
+    opkg remove sing-box >/dev/null 2>&1 || true
     if opkg install "$TEMP_DIR/sing-box.ipk"; then
         echo -e "${GREEN}✓ 安装成功${NC}"
         /etc/init.d/sing-box enable
@@ -129,13 +123,18 @@ install_version() {
 # 回退功能
 # =====================
 rollback_version() {
+    releases=$1
     if [ ! -f "$LAST_VER_FILE" ]; then
         echo -e "${RED}未找到历史版本记录，无法回退${NC}"
         return 1
     fi
     old_ver=$(cat "$LAST_VER_FILE")
+    if [ -z "$old_ver" ]; then
+        echo -e "${RED}历史版本记录为空，无法回退${NC}"
+        return 1
+    fi
     echo -e "${CYAN}准备回退到版本: $old_ver${NC}"
-    install_version "$old_ver"
+    install_version "$old_ver" "$releases"
 }
 
 # =====================
@@ -145,8 +144,10 @@ show_menu() {
     clear
     current_ver=$($BIN_PATH version 2>/dev/null | awk '/version/ {print $3}')
     releases=$(fetch_releases)
-    stable=$(echo "$releases" | jq -r '[.[] | select(.prerelease == false)][0].tag_name')
-    beta=$(echo "$releases" | jq -r '[.[] | select(.prerelease == true)][0].tag_name')
+    [ -z "$releases" ] && { echo -e "${RED}无法获取版本信息${NC}"; exit 1; }
+
+    stable=$(echo "$releases" | jq -er '[.[] | select(.prerelease == false)][0].tag_name' 2>/dev/null || echo "")
+    beta=$(echo "$releases" | jq -er '[.[] | select(.prerelease == true)][0].tag_name' 2>/dev/null || echo "")
 
     echo -e "\n${CYAN}======= Sing-box 更新助手 =======${NC}"
     echo -e "[当前版本] ${GREEN}${current_ver:-未安装}${NC}"
@@ -158,9 +159,9 @@ show_menu() {
     echo -ne "\n请选择 (1/2/3/0): "
     read -r choice
     case $choice in
-        1) install_version "$stable" ;;
-        2) install_version "$beta" ;;
-        3) rollback_version ;;
+        1) install_version "$stable" "$releases" ;;
+        2) install_version "$beta" "$releases" ;;
+        3) rollback_version "$releases" ;;
         0) exit 0 ;;
         *) echo -e "${RED}无效输入${NC}"; sleep 2; show_menu ;;
     esac
