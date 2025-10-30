@@ -48,15 +48,7 @@
     "listen": "0.0.0.0",
     "listen_port": 7895,
     "sniff": true
-   },
-  {
-    "tag": "mixed-in",
-    "type": "mixed",
-    "listen": "0.0.0.0",
-    "listen_port": 7900,
-    "udp_timeout": 180,
-    "sniff": true
-  }
+   }
   ],
   
    "outbounds": [
@@ -88,6 +80,7 @@
       { "tag": "🇲🇾 马来西亚自动", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇲🇾|马来西亚|MY|M|Malaysia"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
       { "tag": "🇺🇲 美国自动", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "include", "keywords": ["🇺🇸|US|us|美国|美|United States"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
       { "tag": "♻️ 自动选择", "type": "urltest", "outbounds": ["{all}"], "filter": [{ "action": "exclude", "keywords": ["网|地址|剩余|过期|时间|有效"] }], "url": "http://www.gstatic.com/generate_204", "interval": "10m", "tolerance": 50 },
+      { "tag": "GLOBAL", "type": "selector", "outbounds": ["{all}"]},
       { "tag": "🎯 全球直连", "type": "direct" }
     ],
   "route": {
@@ -96,11 +89,10 @@
           "final": "🐠 漏网之鱼",
           "default_mark": 666,
       "rules": [
-        { "inbound": ["tun-in", "mixed-in"],"action": "sniff"},
-        { "protocol": "dns", "action": "hijack-dns"},
-        { "rule_set": "AD","clash_mode": "rule","action": "reject"},
+        {"action": "sniff", "sniffer": ["http", "tls", "quic", "dns"]},
+        {"type": "logical", "mode": "or", "rules": [{"port": 53}, {"protocol": "dns"}], "action": "hijack-dns"},
         { "action": "route", "clash_mode": "direct", "outbound": "🎯 全球直连" },
-        { "action": "route", "clash_mode": "global", "outbound": "♻️ 自动选择" },
+        { "action": "route", "clash_mode": "global", "outbound": "GLOBAL" },
         { "domain": ["clash.razord.top", "yacd.metacubex.one", "yacd.haishan.me", "d.metacubex.one"], "outbound": "🎯 全球直连" },
         { "ip_is_private": true,"outbound": "🎯 全球直连"},
         { "rule_set": ["geosite-private", "geoip-private"], "outbound": "🎯 全球直连" },
