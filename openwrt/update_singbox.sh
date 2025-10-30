@@ -139,6 +139,13 @@ install_version() {
         echo -e "${GREEN}✓ 安装成功${NC}"
         /etc/init.d/sing-box enable
         /etc/init.d/sing-box start
+
+        # 安装成功后清理 config.json-opkg
+        if [ -f /etc/sing-box/config.json-opkg ]; then
+            rm -f /etc/sing-box/config.json-opkg
+            echo -e "${CYAN}已清理残留文件 /etc/sing-box/config.json-opkg${NC}"
+        fi
+
         # 安装成功后再更新 last_version
         [ -n "$current_ver" ] && echo "$current_ver" > "$LAST_VER_FILE"
     else
