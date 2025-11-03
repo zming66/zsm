@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DEFAULTS_FILE="/etc/sing-box/defaults.conf"
+MANUAL_FILE="/etc/sing-box/manual.conf"
 
 # 定义颜色
 CYAN='\033[0;36m'
@@ -39,6 +40,14 @@ set_config() {
         echo "$key=$value" >> "$DEFAULTS_FILE"
     fi
     echo -e "${GREEN}已更新 $key=${value}${NC}"
+
+    # 同时更新 manual.conf 文件中的 SUBSCRIPTION_URL 字段
+    if grep -q "^SUBSCRIPTION_URL=" "$MANUAL_FILE"; then
+        sed -i "s|^SUBSCRIPTION_URL=.*|SUBSCRIPTION_URL=$value|" "$MANUAL_FILE"
+    else
+        echo "SUBSCRIPTION_URL=$value" >> "$MANUAL_FILE"
+    fi
+    echo -e "${GREEN}manual.conf 文件中也已更新${NC}"
 }
 
 # 主菜单循环
@@ -76,7 +85,7 @@ while true; do
                 else
                     # 用 | 拼接
                     combined=$(printf "%s|" "${urls[@]}")
-                    combined=${combined%|}
+                    combined=${combined%|} 
                     # 对整串做一次编码（包括 | -> %7C）
                     encoded_combined=$(urlencode "$combined")
                     set_config SUBSCRIPTION_URL "$encoded_combined"
