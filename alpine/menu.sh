@@ -15,7 +15,7 @@ NC='\033[0m' # 无颜色
 # ========== 目录定义 ==========
 SCRIPT_DIR="/etc/sing-box/scripts"
 INITIALIZED_FILE="$SCRIPT_DIR/.initialized"
-BASE_URL="https://raw.githubusercontent.com/zming66/zsm/refs/heads/main/openwrt"
+BASE_URL="https://raw.githubusercontent.com/zming66/zsm/refs/heads/main/alpine"
 
 mkdir -p "$SCRIPT_DIR"
 chown root:root "$SCRIPT_DIR"
