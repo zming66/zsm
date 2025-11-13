@@ -9,6 +9,7 @@ DOMAIN-SUFFIX,mirrors.vsean.net
 #代理
 DOMAIN-SUFFIX,qichiyu.com
 DOMAIN-SUFFIX,api.brokenarrowgame.tech
+DOMAIN-SUFFIX,api.brokenarrowgame.store
 
 #proxmox
 DOMAIN-SUFFIX,proxmox.com
