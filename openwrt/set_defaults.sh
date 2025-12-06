@@ -117,9 +117,9 @@ while true; do
     echo -e "${GREEN}2) 修改订阅地址 ${NC}(当前: $(get_config SUBSCRIPTION_URL))"
     echo -e "${GREEN}3) 修改TProxy配置文件地址 ${NC}(当前: $(get_config TPROXY_TEMPLATE_URL))"
     echo -e "${GREEN}4) 修改TUN配置文件地址 ${NC}(当前: $(get_config TUN_TEMPLATE_URL))"
-    echo -e "${YELLOW}5) 查看当前配置${NC}"
-    echo -e "${GREEN}6) 自动登录并更新订阅地址"
-    echo -e "${GREEN}7) 修改账号和密码"
+    echo -e "${GREEN}5) 自动登录并更新订阅地址"
+    echo -e "${GREEN}6) 修改账号和密码"
+    echo -e "${YELLOW}7) 查看当前配置${NC}"
     echo -e "${RED}0) 退出${NC}"
     echo -e "${CYAN}============================${NC}"
     read -rp "请选择操作: " choice
@@ -168,19 +168,19 @@ while true; do
             [ -n "$val" ] && set_config TUN_TEMPLATE_URL "$val"
             ;;
         5)
-            echo -e "${YELLOW}------ 当前配置 ------${NC}"
-            cat "$DEFAULTS_FILE"
-            echo -e "${YELLOW}----------------------${NC}"
-            ;;
-        6)
             auto_update_subscription
             ;;
-        7)
+        6)
             read -rp "请输入新的登录邮箱: " USER
             read -rp "请输入新的登录密码: " PASS   # 可见输入
             set_config USER "$USER"
             set_config PASS "$PASS"
             echo "账号和密码已更新"
+            ;;
+        7)
+            echo -e "${YELLOW}------ 当前配置 ------${NC}"
+            cat "$DEFAULTS_FILE"
+            echo -e "${YELLOW}----------------------${NC}"
             ;;
         0)
             echo -e "${RED}已退出${NC}"
