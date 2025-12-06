@@ -1,6 +1,6 @@
 ################################################################
-# 中国IPv4地址列表 - 自动生成 (2025-11-29)
-# 来源: APNIC | 原始条目: 8692 | 自定义条目: 2 | 优化后条目: 5477
+# 中国IPv4地址列表 - 自动生成 (2025-12-06)
+# 来源: APNIC | 原始条目: 8767 | 自定义条目: 2 | 优化后条目: 5486
 ################################################################
 /ip firewall address-list remove [find where list="CN"]
 /ip firewall address-list
@@ -2142,7 +2142,6 @@ add address=103.151.148.0/22 list=CN
 add address=103.151.158.0/23 list=CN
 add address=103.151.216.0/23 list=CN
 add address=103.151.228.0/23 list=CN
-add address=103.152.24.0/23 list=CN
 add address=103.152.28.0/22 list=CN
 add address=103.152.56.0/23 list=CN
 add address=103.152.76.0/23 list=CN
@@ -3157,7 +3156,14 @@ add address=117.121.128.0/18 list=CN
 add address=117.121.192.0/21 list=CN
 add address=117.122.128.0/17 list=CN
 add address=117.124.0.0/14 list=CN
-add address=117.128.0.0/10 list=CN
+add address=117.128.0.0/14 list=CN
+add address=117.132.0.0/15 list=CN
+add address=117.134.0.0/17 list=CN
+add address=117.134.128.0/18 list=CN
+add address=117.135.0.0/16 list=CN
+add address=117.136.0.0/13 list=CN
+add address=117.144.0.0/12 list=CN
+add address=117.160.0.0/11 list=CN
 add address=118.24.0.0/15 list=CN
 add address=118.26.0.0/19 list=CN
 add address=118.26.32.0/22 list=CN
@@ -3582,6 +3588,9 @@ add address=144.52.0.0/16 list=CN
 add address=144.79.4.0/23 list=CN
 add address=144.79.10.0/23 list=CN
 add address=144.79.28.0/23 list=CN
+add address=144.79.42.0/23 list=CN
+add address=144.79.54.0/23 list=CN
+add address=144.79.70.0/23 list=CN
 add address=144.123.0.0/16 list=CN
 add address=144.255.0.0/16 list=CN
 add address=146.56.192.0/18 list=CN
