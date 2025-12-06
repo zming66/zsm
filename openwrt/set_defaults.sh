@@ -50,6 +50,64 @@ set_config() {
     echo -e "${GREEN}manual.conf 文件中也已更新${NC}"
 }
 
+# ===== 自动登录并获取订阅地址 =====
+auto_update_subscription() {
+    USER=$(get_config USER)
+    PASS=$(get_config PASS)
+
+    if [ -z "$USER" ] || [ -z "$PASS" ]; then
+        read -rp "请输入登录邮箱: " USER
+        read -rp "请输入登录密码: " PASS   # 可见输入
+        set_config USER "$USER"
+        set_config PASS "$PASS"
+    fi
+
+    BASE_URL="https://hongxingyun.club"   # 可改为从 hongxingyun.help 获取
+
+    echo "尝试登录..."
+    LOGIN=$(curl -s -D headers.txt \
+      -d "email=$USER&password=$PASS" \
+      "$BASE_URL/hxapicc/passport/auth/login")
+
+    echo "登录返回原始数据: $LOGIN"
+
+    # 提取 Cookie
+    COOKIE=$(grep -i "Set-Cookie" headers.txt | head -n1 | cut -d' ' -f2- | tr -d '\r\n')
+    if [ -n "$COOKIE" ]; then
+        set_config COOKIE "$COOKIE"
+        echo "✅ 已保存 Cookie 到 defaults.conf"
+    fi
+
+    # 提取 Bearer Token，兼容不同字段
+    AUTH=$(echo "$LOGIN" | jq -r '.data.auth_data // .data.token // .auth_data // .token')
+    if [ -n "$AUTH" ] && [ "$AUTH" != "null" ]; then
+        case $AUTH in
+            Bearer*) ;; # 已经是完整 Bearer
+            *) AUTH="Bearer $AUTH" ;;
+        esac
+    else
+        echo "❌ 登录失败，未获取到 Bearer Token"
+        return 1
+    fi
+
+    echo "✅ 登录成功，获取到认证信息: $AUTH"
+
+# ===== 获取订阅地址 =====
+    COOKIE=$(get_config COOKIE)
+    SUB_INFO=$(curl -s -H "Authorization: $AUTH" -H "Cookie: $COOKIE" \
+      "$BASE_URL/hxapicc/user/getSubscribe")
+
+    echo "订阅接口返回原始数据: $SUB_INFO"
+
+    SUB_URL=$(echo "$SUB_INFO" | jq -r '.data.subscribe_url')
+    if [ -n "$SUB_URL" ] && [ "$SUB_URL" != "null" ]; then
+        echo "✅ 订阅地址: $SUB_URL"
+        set_config SUBSCRIPTION_URL "$SUB_URL"
+    else
+        echo "❌ 未能获取订阅地址，请检查接口返回"
+    fi
+}
+
 # 主菜单循环
 while true; do
     echo -e "${CYAN}============================${NC}"
@@ -60,6 +118,8 @@ while true; do
     echo -e "${GREEN}3) 修改TProxy配置文件地址 ${NC}(当前: $(get_config TPROXY_TEMPLATE_URL))"
     echo -e "${GREEN}4) 修改TUN配置文件地址 ${NC}(当前: $(get_config TUN_TEMPLATE_URL))"
     echo -e "${YELLOW}5) 查看当前配置${NC}"
+    echo "6) 自动登录并更新订阅地址"
+    echo "7) 修改账号和密码"
     echo -e "${RED}0) 退出${NC}"
     echo -e "${CYAN}============================${NC}"
     read -rp "请选择操作: " choice
@@ -111,6 +171,16 @@ while true; do
             echo -e "${YELLOW}------ 当前配置 ------${NC}"
             cat "$DEFAULTS_FILE"
             echo -e "${YELLOW}----------------------${NC}"
+            ;;
+        6)
+            auto_update_subscription
+            ;;
+        7)
+            read -rp "请输入新的登录邮箱: " USER
+            read -rp "请输入新的登录密码: " PASS   # 可见输入
+            set_config USER "$USER"
+            set_config PASS "$PASS"
+            echo "账号和密码已更新"
             ;;
         0)
             echo -e "${RED}已退出${NC}"
