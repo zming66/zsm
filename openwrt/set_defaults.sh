@@ -118,8 +118,8 @@ while true; do
     echo -e "${GREEN}3) 修改TProxy配置文件地址 ${NC}(当前: $(get_config TPROXY_TEMPLATE_URL))"
     echo -e "${GREEN}4) 修改TUN配置文件地址 ${NC}(当前: $(get_config TUN_TEMPLATE_URL))"
     echo -e "${YELLOW}5) 查看当前配置${NC}"
-    echo "6) 自动登录并更新订阅地址"
-    echo "7) 修改账号和密码"
+    echo -e "${GREEN}6) 自动登录并更新订阅地址"
+    echo -e "${GREEN}7) 修改账号和密码"
     echo -e "${RED}0) 退出${NC}"
     echo -e "${CYAN}============================${NC}"
     read -rp "请选择操作: " choice
