@@ -11,13 +11,6 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # 无颜色
 
-# 检查依赖
-command -v jq >/dev/null 2>&1 || { echo -e "${RED}需要安装 jq${NC}"; exit 1; }
-command -v curl >/dev/null 2>&1 || { echo -e "${RED}需要安装 curl${NC}"; exit 1; }
-
-# 设置配置文件权限
-chmod 600 "$DEFAULTS_FILE" "$MANUAL_FILE"
-
 # URL 编码函数（对整个字符串编码）
 urlencode() {
     local raw="$1"
