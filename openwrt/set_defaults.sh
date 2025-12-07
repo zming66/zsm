@@ -136,12 +136,14 @@ auto_update_subscription() {
     echo "登录返回原始数据: $LOGIN"
 
     # 提取 Cookie
-    COOKIE=$(grep -i "Set-Cookie" headers.txt | head -n1 | cut -d' ' -f2- | tr -d '\r\n')
+    COOKIE=$(grep -i "Set-Cookie" headers.txt | head -n1 | sed -E 's/Set-Cookie:[[:space:]]*([^;]+).*/\1/')
     if [ -n "$COOKIE" ]; then
         set_config COOKIE "$COOKIE"
         echo "✅ 已保存 Cookie 到 defaults.conf"
+    else
+        echo "❌ 未获取到 Cookie"
     fi
-
+    
     # 提取 Bearer Token，兼容不同字段
     AUTH=$(echo "$LOGIN" | jq -r '.data.auth_data // .data.token // .auth_data // .token')
     if [ -n "$AUTH" ] && [ "$AUTH" != "null" ]; then
@@ -149,6 +151,8 @@ auto_update_subscription() {
             Bearer*) ;; # 已经是完整 Bearer
             *) AUTH="Bearer $AUTH" ;;
         esac
+        set_config AUTH "$AUTH"
+        echo "✅ 已保存 Bearer Token 到 defaults.conf"
     else
         echo "❌ 登录失败，未获取到 Bearer Token"
         return 1
@@ -156,7 +160,7 @@ auto_update_subscription() {
 
     echo "✅ 登录成功，获取到认证信息: $AUTH"
 
-# ===== 获取订阅地址 =====
+    # ===== 获取订阅地址 =====
     COOKIE=$(get_config COOKIE)
     SUB_INFO=$(curl -s -H "Authorization: $AUTH" -H "Cookie: $COOKIE" \
       "$BASE_URL/hxapicc/user/getSubscribe")
