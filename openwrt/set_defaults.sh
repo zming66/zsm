@@ -53,6 +53,33 @@ set_config() {
     fi
 }
 
+# 自动选择最快节点
+get_best_node() {
+    NAV_URL="https://hongxingyun.help"
+    echo -e "${CYAN}正在获取登录节点...${NC}"
+
+    NODES=$(curl -s "$NAV_URL" | grep -oE "hongxingyun\.(blog|club|pro|homes)")
+    BEST=""
+    BEST_LATENCY=999999
+
+    for node in $NODES; do
+        LATENCY=$(curl -o /dev/null -s -w "%{time_connect}" "https://$node")
+        LATENCY_MS=$(echo "$LATENCY" | sed 's/\.//g')
+        echo "$node 延迟: $LATENCY 秒"
+        if [ "$LATENCY_MS" -lt "$BEST_LATENCY" ]; then
+            BEST=$node
+            BEST_LATENCY=$LATENCY_MS
+        fi
+    done
+
+    if [ -z "$BEST" ]; then
+        echo -e "${RED}❌ 未找到可用节点${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✅ 选择最快节点: https://$BEST${NC}"
+    echo "https://$BEST"
+
 # ===== 自动登录并获取订阅地址 =====
 auto_update_subscription() {
     USER=$(get_config USER)
@@ -66,7 +93,7 @@ auto_update_subscription() {
         set_config PASS "$PASS"
     fi
 
-    BASE_URL="https://hongxingyun.club"
+    BASE_URL=$(get_best_node)
 
     echo "尝试登录..."
     LOGIN=$(curl -s -D "$HEADERS_FILE" \
