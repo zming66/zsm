@@ -84,11 +84,12 @@ get_best_node() {
     echo "https://$BEST"
 }
 
-# 自动登录并获取订阅地址
+# ===== 自动登录并获取订阅地址 =====
 auto_update_subscription() {
     USER=$(get_config USER)
     PASS=$(get_config PASS)
 
+    # 如果没有账号密码，提示输入
     if [ -z "$USER" ] || [ -z "$PASS" ]; then
         read -rp "请输入登录邮箱: " USER
         read -rsp "请输入登录密码: " PASS
@@ -99,42 +100,44 @@ auto_update_subscription() {
 
     BASE_URL=$(get_best_node)
 
+    # 确保 headers 文件存在
+    touch "$HEADERS_FILE"
+
     echo "尝试登录..."
     LOGIN=$(curl -s -D "$HEADERS_FILE" \
       -d "email=$USER&password=$PASS" \
       -o /dev/null -w "%{http_code}" \
       "$BASE_URL/hxapicc/passport/auth/login")
 
-    if [ "$LOGIN" -ne 200 ]; then
-        echo -e "${RED}❌ 登录失败，HTTP 状态码: $LOGIN${NC}"
+    # 判断 HTTP 状态码
+    if [ "$LOGIN" != "200" ]; then
+        echo -e "${RED}❌ 登录失败，HTTP 状态码: ${LOGIN:-未返回}${NC}"
         return 1
     fi
 
     # 提取 Cookie
     COOKIE=$(grep -i "Set-Cookie" "$HEADERS_FILE" | head -n1 | sed -E 's/Set-Cookie: ([^;]+);.*/\1/')
-    if [ -n "$COOKIE" ]; then
-        set_config COOKIE "$COOKIE"
-        echo "✅ 已保存 Cookie 到 defaults.conf"
+    if [ -z "$COOKIE" ]; then
+        echo -e "${RED}❌ 未能提取 Cookie${NC}"
+        return 1
     fi
+    set_config COOKIE "$COOKIE"
+    echo "✅ 已保存 Cookie 到 defaults.conf"
 
     # 获取 Bearer Token
     AUTH=$(curl -s -H "Cookie: $COOKIE" \
       -d "email=$USER&password=$PASS" \
-      "$BASE_URL/hxapicc/passport/auth/login" | jq -r '.data.auth_data // .data.token // .auth_data // .token')
+      "$BASE_URL/hxapicc/passport/auth/login" | jq -r '.data.auth_data // .data.token // .auth_data // .token // .authorization')
 
-    if [ -n "$AUTH" ] && [ "$AUTH" != "null" ]; then
-        case $AUTH in
-            Bearer*) ;; # 已经是完整 Bearer
-            *) AUTH="Bearer $AUTH" ;;
-        esac
-    else
+    if [ -z "$AUTH" ] || [ "$AUTH" == "null" ]; then
         echo -e "${RED}❌ 登录失败，未获取到 Bearer Token${NC}"
         return 1
     fi
 
+    [[ "$AUTH" != Bearer* ]] && AUTH="Bearer $AUTH"
     echo -e "✅ 登录成功，获取到认证信息: $AUTH"
 
-    # 获取订阅地址
+    # ===== 获取订阅地址 =====
     SUB_INFO=$(curl -s -H "Authorization: $AUTH" -H "Cookie: $COOKIE" \
       "$BASE_URL/hxapicc/user/getSubscribe")
 
