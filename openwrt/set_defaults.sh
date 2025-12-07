@@ -78,7 +78,11 @@ get_best_node() {
     BEST_LATENCY=999999
 
     for link in $LINKS; do
-        LATENCY=$(curl -o /dev/null -s -w "%{time_connect}" "$link")
+        LATENCY=$(curl -o /dev/null -s -w "%{time_starttransfer}" "$link")
+        if [ -z "$LATENCY" ]; then
+            echo "$link 不可达"
+            continue
+        fi
         LATENCY_MS=$(awk "BEGIN {print int($LATENCY * 1000)}")
         echo "$link 延迟: ${LATENCY_MS} ms"
 
@@ -94,7 +98,20 @@ get_best_node() {
         [ -z "$BEST" ] && error_exit "没有可用入口，也没有保存的后端地址"
     fi
 
-    echo -e "${GREEN}✅ 选择入口: $BEST${NC}"
+    echo -e "${GREEN}✅ 选择入口: $BEST (延迟 ${BEST_LATENCY} ms)${NC}"
+
+    # 写入 /etc/sing-box/defaults.conf 中 JC_URL
+    DEFAULTS_FILE="/etc/sing-box/defaults.conf"
+    tmp=$(mktemp)
+    awk -F= -v k="JC_URL" -v v="$BEST" '
+        BEGIN{found=0}
+        $1==k {print k"="v; found=1; next}
+        {print}
+        END{if(!found) print k"="v}
+    ' "$DEFAULTS_FILE" > "$tmp" && mv "$tmp" "$DEFAULTS_FILE"
+
+    echo -e "${GREEN}已更新 JC_URL=$BEST 到 $DEFAULTS_FILE${NC}"
+
     echo "$BEST"
 }
 
@@ -110,7 +127,7 @@ auto_update_subscription() {
         set_config PASS "$PASS"
     fi
 
-    BASE_URL=$(get_best_node | sed -E 's#(https://[^/]+)/.*#\1#')
+    BASE_URL=$(get_config JC_URL)
 
     echo "尝试登录..."
     LOGIN=$(curl -s -D headers.txt \
