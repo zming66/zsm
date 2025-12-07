@@ -64,14 +64,19 @@ get_best_node() {
     NAV_URL="https://hongxingyun.help"
     echo -e "${CYAN}正在获取登录节点...${NC}"
 
-    NODES=$(curl -s "$NAV_URL" | grep -oE "hongxingyun\.(blog|club|pro|homes)")
+    # 抓取导航页内容并提取所有候选节点
+    NODES=$(curl -s "$NAV_URL" | grep -oE "hongxingyun\.[a-z]+" | sort -u)
+
     BEST=""
     BEST_LATENCY=999999
 
     for node in $NODES; do
+        # 测试连接延迟（毫秒）
         LATENCY=$(curl -o /dev/null -s -w "%{time_connect}" "https://$node")
-        LATENCY_MS=$(echo "$LATENCY" | sed 's/\.//g')
-        echo "$node 延迟: $LATENCY 秒"
+        LATENCY_MS=$(awk "BEGIN {print $LATENCY * 1000}")
+        echo "$node 延迟: ${LATENCY_MS} ms"
+
+        # 选择最小延迟的节点
         if [ "$LATENCY_MS" -lt "$BEST_LATENCY" ]; then
             BEST=$node
             BEST_LATENCY=$LATENCY_MS
@@ -83,6 +88,7 @@ get_best_node() {
     echo -e "${GREEN}✅ 选择最快节点: https://$BEST${NC}"
     echo "https://$BEST"
 }
+
 
 # ===== 自动登录并获取订阅地址 =====
 auto_update_subscription() {
