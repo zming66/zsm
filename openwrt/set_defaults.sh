@@ -114,7 +114,7 @@ get_best_node() {
 
     echo "$BEST"
 }
-# ===== 自动登录并获取订阅地址 =====
+# ==# ===== 自动登录并获取订阅地址 =====
 auto_update_subscription() {
     USER=$(get_config USER)
     PASS=$(get_config PASS)
@@ -135,20 +135,27 @@ auto_update_subscription() {
 
     echo "登录返回原始数据: $LOGIN"
 
-    # 提取 Cookie
-    COOKIE=$(grep -i "Set-Cookie" headers.txt | head -n1 | sed -E 's/Set-Cookie:[[:space:]]*([^;]+).*/\1/')
+    # ===== 修复后的 Cookie 提取 =====
+    COOKIE=$(grep -i "Set-Cookie" headers.txt \
+        | sed -E 's/Set-Cookie:[[:space:]]*([^=]+=[^;]+).*/\1/' \
+        | grep -v -i 'deleted' \
+        | paste -sd '; ' -)
+
     if [ -n "$COOKIE" ]; then
         set_config COOKIE "$COOKIE"
-        echo "✅ 已保存 Cookie 到 defaults.conf"
+        echo "✅ 已保存 Cookie 到 defaults.conf → $COOKIE"
     else
         echo "❌ 未获取到 Cookie"
     fi
-    
-    # 提取 Bearer Token，兼容不同字段
-    AUTH=$(echo "$LOGIN" | jq -r '.data.auth_data // .data.token // .auth_data // .token')
+
+    # ===== Bearer Token 解析（兼容多种字段）=====
+    AUTH=$(echo "$LOGIN" | jq -r '
+        .data.auth_data // .data.token // .auth_data // .token // empty
+    ')
+
     if [ -n "$AUTH" ] && [ "$AUTH" != "null" ]; then
         case $AUTH in
-            Bearer*) ;; # 已经是完整 Bearer
+            Bearer*) ;;  # 已包含 Bearer
             *) AUTH="Bearer $AUTH" ;;
         esac
         set_config AUTH "$AUTH"
