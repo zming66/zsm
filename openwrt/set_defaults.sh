@@ -2,6 +2,7 @@
 
 DEFAULTS_FILE="/etc/sing-box/defaults.conf"
 MANUAL_FILE="/etc/sing-box/manual.conf"
+HEADERS_FILE="/etc/sing-box/headers.txt"
 
 # 定义颜色
 CYAN='\033[0;36m'
@@ -9,6 +10,13 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # 无颜色
+
+# 检查依赖
+command -v jq >/dev/null 2>&1 || { echo -e "${RED}需要安装 jq${NC}"; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo -e "${RED}需要安装 curl${NC}"; exit 1; }
+
+# 设置配置文件权限
+chmod 600 "$DEFAULTS_FILE" "$MANUAL_FILE"
 
 # URL 编码函数（对整个字符串编码）
 urlencode() {
@@ -42,12 +50,14 @@ set_config() {
     echo -e "${GREEN}已更新 $key=${value}${NC}"
 
     # 同时更新 manual.conf 文件中的 SUBSCRIPTION_URL 字段
-    if grep -q "^SUBSCRIPTION_URL=" "$MANUAL_FILE"; then
-        sed -i "s|^SUBSCRIPTION_URL=.*|SUBSCRIPTION_URL=$value|" "$MANUAL_FILE"
-    else
-        echo "SUBSCRIPTION_URL=$value" >> "$MANUAL_FILE"
+    if [ "$key" == "SUBSCRIPTION_URL" ]; then
+        if grep -q "^SUBSCRIPTION_URL=" "$MANUAL_FILE"; then
+            sed -i "s|^SUBSCRIPTION_URL=.*|SUBSCRIPTION_URL=$value|" "$MANUAL_FILE"
+        else
+            echo "SUBSCRIPTION_URL=$value" >> "$MANUAL_FILE"
+        fi
+        echo -e "${GREEN}manual.conf 文件中也已更新${NC}"
     fi
-    echo -e "${GREEN}manual.conf 文件中也已更新${NC}"
 }
 
 # ===== 自动登录并获取订阅地址 =====
@@ -57,54 +67,59 @@ auto_update_subscription() {
 
     if [ -z "$USER" ] || [ -z "$PASS" ]; then
         read -rp "请输入登录邮箱: " USER
-        read -rp "请输入登录密码: " PASS   # 可见输入
+        read -rsp "请输入登录密码: " PASS
+        echo
         set_config USER "$USER"
         set_config PASS "$PASS"
     fi
 
-    BASE_URL="https://hongxingyun.club"   # 可改为从 hongxingyun.help 获取
+    BASE_URL="https://hongxingyun.club"
 
     echo "尝试登录..."
-    LOGIN=$(curl -s -D headers.txt \
+    LOGIN=$(curl -s -D "$HEADERS_FILE" \
       -d "email=$USER&password=$PASS" \
+      -o /dev/null -w "%{http_code}" \
       "$BASE_URL/hxapicc/passport/auth/login")
 
-    echo "登录返回原始数据: $LOGIN"
+    if [ "$LOGIN" -ne 200 ]; then
+        echo -e "${RED}❌ 登录失败，HTTP 状态码: $LOGIN${NC}"
+        return 1
+    fi
 
     # 提取 Cookie
-    COOKIE=$(grep -i "Set-Cookie" headers.txt | head -n1 | cut -d' ' -f2- | tr -d '\r\n')
+    COOKIE=$(grep -i "Set-Cookie" "$HEADERS_FILE" | head -n1 | cut -d' ' -f2- | tr -d '\r\n')
     if [ -n "$COOKIE" ]; then
         set_config COOKIE "$COOKIE"
         echo "✅ 已保存 Cookie 到 defaults.conf"
     fi
 
-    # 提取 Bearer Token，兼容不同字段
-    AUTH=$(echo "$LOGIN" | jq -r '.data.auth_data // .data.token // .auth_data // .token')
+    # 获取 Bearer Token
+    AUTH=$(curl -s -H "Cookie: $COOKIE" \
+      -d "email=$USER&password=$PASS" \
+      "$BASE_URL/hxapicc/passport/auth/login" | jq -r '.data.auth_data // .data.token // .auth_data // .token')
+
     if [ -n "$AUTH" ] && [ "$AUTH" != "null" ]; then
         case $AUTH in
             Bearer*) ;; # 已经是完整 Bearer
             *) AUTH="Bearer $AUTH" ;;
         esac
     else
-        echo "❌ 登录失败，未获取到 Bearer Token"
+        echo -e "${RED}❌ 登录失败，未获取到 Bearer Token${NC}"
         return 1
     fi
 
-    echo "✅ 登录成功，获取到认证信息: $AUTH"
+    echo -e "✅ 登录成功，获取到认证信息: $AUTH"
 
-# ===== 获取订阅地址 =====
-    COOKIE=$(get_config COOKIE)
+    # ===== 获取订阅地址 =====
     SUB_INFO=$(curl -s -H "Authorization: $AUTH" -H "Cookie: $COOKIE" \
       "$BASE_URL/hxapicc/user/getSubscribe")
-
-    echo "订阅接口返回原始数据: $SUB_INFO"
 
     SUB_URL=$(echo "$SUB_INFO" | jq -r '.data.subscribe_url')
     if [ -n "$SUB_URL" ] && [ "$SUB_URL" != "null" ]; then
         echo "✅ 订阅地址: $SUB_URL"
         set_config SUBSCRIPTION_URL "$SUB_URL"
     else
-        echo "❌ 未能获取订阅地址，请检查接口返回"
+        echo -e "${RED}❌ 未能获取订阅地址，请检查接口返回${NC}"
     fi
 }
 
@@ -143,20 +158,16 @@ while true; do
                 if [ ${#urls[@]} -eq 0 ]; then
                     echo -e "${RED}未输入任何地址${NC}"
                 else
-                    # 用 | 拼接
                     combined=$(printf "%s|" "${urls[@]}")
-                    combined=${combined%|} 
-                    # 对整串做一次编码（包括 | -> %7C）
+                    combined=${combined%|}
                     encoded_combined=$(urlencode "$combined")
                     set_config SUBSCRIPTION_URL "$encoded_combined"
                     echo -e "${GREEN}多地址已编码并更新${NC}"
                 fi
             else
                 read -rp "请输入新的订阅地址(单地址不编码): " val
-                if [ -n "$val" ]; then
-                    set_config SUBSCRIPTION_URL "$val"
-                    echo -e "${GREEN}单地址已更新（未编码）${NC}"
-                fi
+                [ -n "$val" ] && set_config SUBSCRIPTION_URL "$val"
+                echo -e "${GREEN}单地址已更新（未编码）${NC}"
             fi
             ;;
         3)
@@ -172,7 +183,8 @@ while true; do
             ;;
         6)
             read -rp "请输入新的登录邮箱: " USER
-            read -rp "请输入新的登录密码: " PASS   # 可见输入
+            read -rsp "请输入新的登录密码: " PASS
+            echo
             set_config USER "$USER"
             set_config PASS "$PASS"
             echo "账号和密码已更新"
