@@ -181,7 +181,7 @@ while true; do
     echo -e "${GREEN}2) 修改订阅地址 ${NC}(当前: $(get_config SUBSCRIPTION_URL))"
     echo -e "${GREEN}3) 修改TProxy配置文件地址 ${NC}(当前: $(get_config TPROXY_TEMPLATE_URL))"
     echo -e "${GREEN}4) 修改TUN配置文件地址 ${NC}(当前: $(get_config TUN_TEMPLATE_URL))"
-    echo -e "${GREEN}5) 自动登录并更新订阅地址"
+    echo -e "${GREEN}5) 自动登录并更新订阅地址 ${NC}(当前: $(get_config JC_URL))"
     echo -e "${GREEN}6) 修改账号和密码"
     echo -e "${YELLOW}7) 查看当前配置${NC}"
     echo -e "${RED}0) 退出${NC}"
