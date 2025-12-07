@@ -11,6 +11,12 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # 无颜色
 
+# 错误处理函数
+error_exit() {
+    echo -e "${RED}❌ $1${NC}"
+    exit 1
+}
+
 # URL 编码函数（对整个字符串编码）
 urlencode() {
     local raw="$1"
@@ -72,15 +78,13 @@ get_best_node() {
         fi
     done
 
-    if [ -z "$BEST" ]; then
-        echo -e "${RED}❌ 未找到可用节点${NC}"
-        exit 1
-    fi
+    [ -z "$BEST" ] && error_exit "未找到可用节点"
 
     echo -e "${GREEN}✅ 选择最快节点: https://$BEST${NC}"
     echo "https://$BEST"
+}
 
-# ===== 自动登录并获取订阅地址 =====
+# 自动登录并获取订阅地址
 auto_update_subscription() {
     USER=$(get_config USER)
     PASS=$(get_config PASS)
@@ -107,7 +111,7 @@ auto_update_subscription() {
     fi
 
     # 提取 Cookie
-    COOKIE=$(grep -i "Set-Cookie" "$HEADERS_FILE" | head -n1 | cut -d' ' -f2- | tr -d '\r\n')
+    COOKIE=$(grep -i "Set-Cookie" "$HEADERS_FILE" | head -n1 | sed -E 's/Set-Cookie: ([^;]+);.*/\1/')
     if [ -n "$COOKIE" ]; then
         set_config COOKIE "$COOKIE"
         echo "✅ 已保存 Cookie 到 defaults.conf"
@@ -130,7 +134,7 @@ auto_update_subscription() {
 
     echo -e "✅ 登录成功，获取到认证信息: $AUTH"
 
-    # ===== 获取订阅地址 =====
+    # 获取订阅地址
     SUB_INFO=$(curl -s -H "Authorization: $AUTH" -H "Cookie: $COOKIE" \
       "$BASE_URL/hxapicc/user/getSubscribe")
 
