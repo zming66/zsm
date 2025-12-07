@@ -4,9 +4,9 @@ UI_DIR="/etc/sing-box/ui"
 BACKUP_DIR="/tmp/sing-box/ui_backup"
 TEMP_DIR="/tmp/sing-box-ui"
 
-ZASHBOARD_URL="https://gh-proxy.comhttps://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
-METACUBEXD_URL="https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
-YACD_URL="https://gh-proxy.com/https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip"
+ZASHBOARD_URL="https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
+METACUBEXD_URL="https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
+YACD_URL="https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip"
 
 # 定义颜色
 CYAN='\033[0;36m'
@@ -30,7 +30,7 @@ check_and_install_dependencies() {
 
 get_download_url() {
     CONFIG_FILE="/etc/sing-box/config.json"
-    DEFAULT_URL="https://gh-proxy.com/https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip"
+    DEFAULT_URL="https://github.com/Zephyruso/zashboard/archive/refs/heads/gh-pages.zip"
     
     if [ -f "$CONFIG_FILE" ]; then
         URL=$(grep -o '"external_ui_download_url": "[^"]*' "$CONFIG_FILE" | sed 's/"external_ui_download_url": "//')
