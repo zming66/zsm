@@ -183,6 +183,22 @@ auto_update_subscription() {
     fi
 }
 
+# 支持通过参数直接执行菜单功能
+if [[ $# -gt 0 ]]; then
+    choice=$1
+    case $choice in
+        5)
+            get_best_node
+            auto_update_subscription
+            exit 0
+            ;;
+        *)
+            echo "未知参数: $choice"
+            exit 1
+            ;;
+    esac
+fi
+
 # 主菜单循环
 while true; do
     echo -e "${CYAN}============================${NC}"
