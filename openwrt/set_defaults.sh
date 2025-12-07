@@ -114,7 +114,6 @@ get_best_node() {
 
     echo "$BEST"
 }
-
 # ===== 自动登录并获取订阅地址 =====
 auto_update_subscription() {
     USER=$(get_config USER)
@@ -228,6 +227,7 @@ while true; do
             [ -n "$val" ] && set_config TUN_TEMPLATE_URL "$val"
             ;;
         5)
+            get_best_node
             auto_update_subscription
             ;;
         6)
