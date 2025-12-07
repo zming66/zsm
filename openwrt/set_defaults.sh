@@ -17,7 +17,12 @@ error_exit() {
     exit 1
 }
 
-# URL 编码函数（对整个字符串编码）
+# 依赖检查
+for cmd in curl jq awk sed; do
+    command -v $cmd >/dev/null 2>&1 || error_exit "缺少依赖: $cmd"
+done
+
+# URL 编码函数
 urlencode() {
     local raw="$1"
     local length="${#raw}"
@@ -37,122 +42,117 @@ get_config() {
     awk -F= -v k="$key" '$1==k {print $2}' "$DEFAULTS_FILE"
 }
 
-# 更新配置函数
+# 更新配置函数（避免重复键）
 set_config() {
     local key=$1
     local value=$2
-    if grep -q "^$key=" "$DEFAULTS_FILE"; then
-        sed -i "s|^$key=.*|$key=$value|" "$DEFAULTS_FILE"
-    else
-        echo "$key=$value" >> "$DEFAULTS_FILE"
-    fi
+    tmp=$(mktemp)
+    awk -F= -v k="$key" -v v="$value" '
+        BEGIN{found=0}
+        $1==k {print k"="v; found=1; next}
+        {print}
+        END{if(!found) print k"="v}
+    ' "$DEFAULTS_FILE" > "$tmp" && mv "$tmp" "$DEFAULTS_FILE"
     echo -e "${GREEN}已更新 $key=${value}${NC}"
 
     # 同时更新 manual.conf 文件中的 SUBSCRIPTION_URL 字段
     if [ "$key" == "SUBSCRIPTION_URL" ]; then
-        if grep -q "^SUBSCRIPTION_URL=" "$MANUAL_FILE"; then
-            sed -i "s|^SUBSCRIPTION_URL=.*|SUBSCRIPTION_URL=$value|" "$MANUAL_FILE"
-        else
-            echo "SUBSCRIPTION_URL=$value" >> "$MANUAL_FILE"
-        fi
+        tmp2=$(mktemp)
+        awk -F= -v k="SUBSCRIPTION_URL" -v v="$value" '
+            BEGIN{found=0}
+            $1==k {print k"="v; found=1; next}
+            {print}
+            END{if(!found) print k"="v}
+        ' "$MANUAL_FILE" > "$tmp2" && mv "$tmp2" "$MANUAL_FILE"
         echo -e "${GREEN}manual.conf 文件中也已更新${NC}"
     fi
 }
 
-# 自动选择最快节点
+# 自动选择最快节点并返回登录入口
 get_best_node() {
     NAV_URL="https://hongxingyun.help"
-    echo -e "${CYAN}正在获取登录节点...${NC}"
+    echo -e "${CYAN}正在解析导航页...${NC}"
 
-    # 抓取导航页内容并提取所有候选节点
-    NODES=$(curl -s "$NAV_URL" | grep -oE "hongxingyun\.[a-z]+" | sort -u)
-
+    LINKS=$(curl -s "$NAV_URL" | grep -Eo 'https://hongxingyun[^" ]+' | sort -u)
     BEST=""
     BEST_LATENCY=999999
 
-    for node in $NODES; do
-        # 测试连接延迟（毫秒）
-        LATENCY=$(curl -o /dev/null -s -w "%{time_connect}" "https://$node")
-        LATENCY_MS=$(awk "BEGIN {print $LATENCY * 1000}")
-        echo "$node 延迟: ${LATENCY_MS} ms"
+    for link in $LINKS; do
+        LATENCY=$(curl -o /dev/null -s -w "%{time_connect}" "$link")
+        LATENCY_MS=$(awk "BEGIN {print int($LATENCY * 1000)}")
+        echo "$link 延迟: ${LATENCY_MS} ms"
 
-        # 选择最小延迟的节点
         if [ "$LATENCY_MS" -lt "$BEST_LATENCY" ]; then
-            BEST=$node
+            BEST=$link
             BEST_LATENCY=$LATENCY_MS
         fi
     done
 
-    [ -z "$BEST" ] && error_exit "未找到可用节点"
+    if [ -z "$BEST" ]; then
+        echo -e "${YELLOW}未找到可用入口，尝试使用上次保存的 BACKEND_URL${NC}"
+        BEST=$(get_config BACKEND_URL)
+        [ -z "$BEST" ] && error_exit "没有可用入口，也没有保存的后端地址"
+    fi
 
-    echo -e "${GREEN}✅ 选择最快节点: https://$BEST${NC}"
-    echo "https://$BEST"
+    echo -e "${GREEN}✅ 选择入口: $BEST${NC}"
+    echo "$BEST"
 }
-
 
 # ===== 自动登录并获取订阅地址 =====
 auto_update_subscription() {
     USER=$(get_config USER)
     PASS=$(get_config PASS)
 
-    # 如果没有账号密码，提示输入
     if [ -z "$USER" ] || [ -z "$PASS" ]; then
         read -rp "请输入登录邮箱: " USER
-        read -rsp "请输入登录密码: " PASS
-        echo
+        read -rp "请输入登录密码: " PASS
         set_config USER "$USER"
         set_config PASS "$PASS"
     fi
 
-    BASE_URL=$(get_best_node)
-
-    # 确保 headers 文件存在
-    touch "$HEADERS_FILE"
+    BASE_URL=$(get_best_node | sed -E 's#(https://[^/]+)/.*#\1#')
 
     echo "尝试登录..."
-    LOGIN=$(curl -s -D "$HEADERS_FILE" \
+    LOGIN=$(curl -s -D headers.txt \
       -d "email=$USER&password=$PASS" \
-      -o /dev/null -w "%{http_code}" \
       "$BASE_URL/hxapicc/passport/auth/login")
 
-    # 判断 HTTP 状态码
-    if [ "$LOGIN" != "200" ]; then
-        echo -e "${RED}❌ 登录失败，HTTP 状态码: ${LOGIN:-未返回}${NC}"
-        return 1
-    fi
+    echo "登录返回原始数据: $LOGIN"
 
     # 提取 Cookie
-    COOKIE=$(grep -i "Set-Cookie" "$HEADERS_FILE" | head -n1 | sed -E 's/Set-Cookie: ([^;]+);.*/\1/')
-    if [ -z "$COOKIE" ]; then
-        echo -e "${RED}❌ 未能提取 Cookie${NC}"
-        return 1
-    fi
-    set_config COOKIE "$COOKIE"
-    echo "✅ 已保存 Cookie 到 defaults.conf"
-
-    # 获取 Bearer Token
-    AUTH=$(curl -s -H "Cookie: $COOKIE" \
-      -d "email=$USER&password=$PASS" \
-      "$BASE_URL/hxapicc/passport/auth/login" | jq -r '.data.auth_data // .data.token // .auth_data // .token // .authorization')
-
-    if [ -z "$AUTH" ] || [ "$AUTH" == "null" ]; then
-        echo -e "${RED}❌ 登录失败，未获取到 Bearer Token${NC}"
-        return 1
+    COOKIE=$(grep -i "Set-Cookie" headers.txt | head -n1 | cut -d' ' -f2- | tr -d '\r\n')
+    if [ -n "$COOKIE" ]; then
+        set_config COOKIE "$COOKIE"
+        echo "✅ 已保存 Cookie 到 defaults.conf"
     fi
 
-    [[ "$AUTH" != Bearer* ]] && AUTH="Bearer $AUTH"
-    echo -e "✅ 登录成功，获取到认证信息: $AUTH"
+    # 提取 Bearer Token，兼容不同字段
+    AUTH=$(echo "$LOGIN" | jq -r '.data.auth_data // .data.token // .auth_data // .token')
+    if [ -n "$AUTH" ] && [ "$AUTH" != "null" ]; then
+        case $AUTH in
+            Bearer*) ;; # 已经是完整 Bearer
+            *) AUTH="Bearer $AUTH" ;;
+        esac
+    else
+        echo "❌ 登录失败，未获取到 Bearer Token"
+        return 1
+    fi
 
-    # ===== 获取订阅地址 =====
+    echo "✅ 登录成功，获取到认证信息: $AUTH"
+
+# ===== 获取订阅地址 =====
+    COOKIE=$(get_config COOKIE)
     SUB_INFO=$(curl -s -H "Authorization: $AUTH" -H "Cookie: $COOKIE" \
       "$BASE_URL/hxapicc/user/getSubscribe")
+
+    echo "订阅接口返回原始数据: $SUB_INFO"
 
     SUB_URL=$(echo "$SUB_INFO" | jq -r '.data.subscribe_url')
     if [ -n "$SUB_URL" ] && [ "$SUB_URL" != "null" ]; then
         echo "✅ 订阅地址: $SUB_URL"
         set_config SUBSCRIPTION_URL "$SUB_URL"
     else
-        echo -e "${RED}❌ 未能获取订阅地址，请检查接口返回${NC}"
+        echo "❌ 未能获取订阅地址，请检查接口返回"
     fi
 }
 
@@ -187,7 +187,6 @@ while true; do
                     [ -z "$addr" ] && break
                     urls+=("$addr")
                 done
-
                 if [ ${#urls[@]} -eq 0 ]; then
                     echo -e "${RED}未输入任何地址${NC}"
                 else
