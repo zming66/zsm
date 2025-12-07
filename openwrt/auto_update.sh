@@ -12,6 +12,9 @@ MANUAL_FILE="/etc/sing-box/manual.conf"
 cat > /etc/sing-box/update-singbox.sh <<EOF
 #!/bin/bash
 
+echo "正在更新订阅地址..."
+bash /etc/sing-box/scripts/set_defaults.sh 5
+
 # 读取手动输入的配置参数
 BACKEND_URL=\$(grep BACKEND_URL $MANUAL_FILE | cut -d'=' -f2-)
 SUBSCRIPTION_URL=\$(grep SUBSCRIPTION_URL $MANUAL_FILE | cut -d'=' -f2-)
