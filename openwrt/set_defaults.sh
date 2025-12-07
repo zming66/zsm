@@ -182,7 +182,7 @@ while true; do
     echo -e "${GREEN}3) 修改TProxy配置文件地址 ${NC}(当前: $(get_config TPROXY_TEMPLATE_URL))"
     echo -e "${GREEN}4) 修改TUN配置文件地址 ${NC}(当前: $(get_config TUN_TEMPLATE_URL))"
     echo -e "${GREEN}5) 自动登录并更新订阅地址 ${NC}(当前: $(get_config JC_URL))"
-    echo -e "${GREEN}6) 修改账号和密码"
+    echo -e "${GREEN}6) 修改 账号-密码-机场"
     echo -e "${YELLOW}7) 查看当前配置${NC}"
     echo -e "${RED}0) 退出${NC}"
     echo -e "${CYAN}============================${NC}"
@@ -231,13 +231,41 @@ while true; do
             auto_update_subscription
             ;;
         6)
-            read -rp "请输入新的登录邮箱: " USER
-            read -rsp "请输入新的登录密码: " PASS
-            echo
-            set_config USER "$USER"
-            set_config PASS "$PASS"
-            echo "账号和密码已更新"
+            read -rp "是否修改登录邮箱? (y/n): " ans_user
+            if [ "$ans_user" = "y" ]; then
+                read -rp "请输入新的登录邮箱: " USER
+                if [ -n "$USER" ]; then
+                    set_config USER "$USER"
+                    echo "✅ 邮箱已更新"
+                else
+                    echo "❌ 邮箱不能为空"
+                fi
+            fi
+        
+            read -rp "是否修改登录密码? (y/n): " ans_pass
+            if [ "$ans_pass" = "y" ]; then
+                read -rsp "请输入新的登录密码: " PASS
+                echo
+                if [ -n "$PASS" ]; then
+                    set_config PASS "$PASS"
+                    echo "✅ 密码已更新"
+                else
+                    echo "❌ 密码不能为空"
+                fi
+            fi
+        
+            read -rp "是否修改网址 JC_URL? (y/n): " ans_url
+            if [ "$ans_url" = "y" ]; then
+                read -rp "请输入新的网址 JC_URL: " JC_URL
+                if [ -n "$JC_URL" ]; then
+                    set_config JC_URL "$JC_URL"
+                    echo "✅ 机场地址 已更新"
+                else
+                    echo "❌ 机场地址 不能为空"
+                fi
+            fi
             ;;
+
         7)
             echo -e "${YELLOW}------ 当前配置 ------${NC}"
             cat "$DEFAULTS_FILE"
