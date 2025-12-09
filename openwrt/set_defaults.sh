@@ -217,7 +217,7 @@ while true; do
     echo -e "${GREEN}3) 修改TProxy配置文件地址 ${NC}(当前: $(get_config TPROXY_TEMPLATE_URL))"
     echo -e "${GREEN}4) 修改TUN配置文件地址 ${NC}(当前: $(get_config TUN_TEMPLATE_URL))"
     echo -e "${GREEN}5) 自动登录并更新订阅地址 ${NC}(当前: $(get_config JC_URL))"
-    echo -e "${GREEN}6) 修改 账号-密码-机场导航"
+    echo -e "${GREEN}6) 修改 账号-密码-机场导航 ${NC}(当前: $(get_config NAV_URL))"
     echo -e "${YELLOW}7) 查看当前配置${NC}"
     echo -e "${RED}0) 退出${NC}"
     echo -e "${CYAN}============================${NC}"
