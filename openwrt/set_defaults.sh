@@ -80,7 +80,10 @@ get_best_node() {
 
     echo -e "${CYAN}正在解析导航页: $NAV_URL...${NC}"
 
-    LINKS=$(curl -s "$NAV_URL" | grep -Eo 'https://hongxingyun[^" ]+' | sort -u)
+    LINKS=$(curl -s "$NAV_URL" \
+        | grep -Eo 'hongxingyun\.[a-zA-Z0-9.]+' \
+        | sed 's/^/https:\/\//' \
+        | sort -u)
     BEST=""
     BEST_LATENCY=999999
 
