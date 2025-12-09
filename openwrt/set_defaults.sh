@@ -2,7 +2,6 @@
 
 DEFAULTS_FILE="/etc/sing-box/defaults.conf"
 MANUAL_FILE="/etc/sing-box/manual.conf"
-HEADERS_FILE="/etc/sing-box/headers.txt"
 
 # 定义颜色
 CYAN='\033[0;36m'
@@ -144,48 +143,15 @@ auto_update_subscription() {
     BASE_URL=$(get_config JC_URL)
 
     echo "尝试登录..."
-    LOGIN=$(curl -s -D headers.txt \
-      -d "email=$USER&password=$PASS" \
-      "$BASE_URL/hxapicc/passport/auth/login")
+    LOGIN=$(curl -s -d "email=$USER&password=$PASS" \
+        "$BASE_URL/hxapicc/passport/auth/login")
 
     echo "登录返回原始数据: $LOGIN"
 
-    # ===== 修复后的 Cookie 提取 =====
-    COOKIE=$(grep -i "Set-Cookie" headers.txt \
-        | sed -E 's/Set-Cookie:[[:space:]]*([^=]+=[^;]+).*/\1/' \
-        | grep -v -i 'deleted' \
-        | paste -sd '; ' -)
-
-    if [ -n "$COOKIE" ]; then
-        set_config COOKIE "$COOKIE"
-        echo "✅ 已保存 Cookie 到 defaults.conf → $COOKIE"
-    else
-        echo "❌ 未获取到 Cookie"
-    fi
-
-    # ===== Bearer Token 解析（兼容多种字段）=====
-    AUTH=$(echo "$LOGIN" | jq -r '
-        .data.auth_data // .data.token // .auth_data // .token // empty
-    ')
-
-    if [ -n "$AUTH" ] && [ "$AUTH" != "null" ]; then
-        case $AUTH in
-            Bearer*) ;;  # 已包含 Bearer
-            *) AUTH="Bearer $AUTH" ;;
-        esac
-        set_config AUTH "$AUTH"
-        echo "✅ 已保存 Bearer Token 到 defaults.conf"
-    else
-        echo "❌ 登录失败，未获取到 Bearer Token"
-        return 1
-    fi
-
-    echo "✅ 登录成功，获取到认证信息: $AUTH"
+    echo "登录成功（未保存 Token 和 Cookie）"
 
     # ===== 获取订阅地址 =====
-    COOKIE=$(get_config COOKIE)
-    SUB_INFO=$(curl -s -H "Authorization: $AUTH" -H "Cookie: $COOKIE" \
-      "$BASE_URL/hxapicc/user/getSubscribe")
+    SUB_INFO=$(curl -s "$BASE_URL/hxapicc/user/getSubscribe")
 
     echo "订阅接口返回原始数据: $SUB_INFO"
 
