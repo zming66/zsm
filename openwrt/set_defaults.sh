@@ -70,8 +70,15 @@ set_config() {
 
 # 自动选择最快节点并返回登录入口
 get_best_node() {
-    NAV_URL="https://hongxingyun.help"
-    echo -e "${CYAN}正在解析导航页...${NC}"
+    NAV_URL=$(get_config NAV_URL)
+
+    # 未设置则使用默认值
+    if [ -z "$NAV_URL" ]; then
+        NAV_URL="https://hongxingyun.help"
+        set_config NAV_URL "$NAV_URL"
+    fi
+
+    echo -e "${CYAN}正在解析导航页: $NAV_URL...${NC}"
 
     LINKS=$(curl -s "$NAV_URL" | grep -Eo 'https://hongxingyun[^" ]+' | sort -u)
     BEST=""
@@ -209,7 +216,7 @@ while true; do
     echo -e "${GREEN}3) 修改TProxy配置文件地址 ${NC}(当前: $(get_config TPROXY_TEMPLATE_URL))"
     echo -e "${GREEN}4) 修改TUN配置文件地址 ${NC}(当前: $(get_config TUN_TEMPLATE_URL))"
     echo -e "${GREEN}5) 自动登录并更新订阅地址 ${NC}(当前: $(get_config JC_URL))"
-    echo -e "${GREEN}6) 修改 账号-密码-机场"
+    echo -e "${GREEN}6) 修改 账号-密码-机场导航"
     echo -e "${YELLOW}7) 查看当前配置${NC}"
     echo -e "${RED}0) 退出${NC}"
     echo -e "${CYAN}============================${NC}"
@@ -281,14 +288,14 @@ while true; do
                 fi
             fi
         
-            read -rp "是否修改网址 JC_URL? (y/n): " ans_url
+            read -rp "是否修改机场导航网址 NAV_URL? (y/n): " ans_url
             if [ "$ans_url" = "y" ]; then
-                read -rp "请输入新的网址 JC_URL: " JC_URL
-                if [ -n "$JC_URL" ]; then
-                    set_config JC_URL "$JC_URL"
-                    echo "✅ 机场地址 已更新"
+                read -rp "请输入新机场导航网址 NAV_URL: " NAV_URL
+                if [ -n "$NAV_URL" ]; then
+                    set_config NAV_URL "$NAV_URL"
+                    echo "✅ 机场导航网址 已更新"
                 else
-                    echo "❌ 机场地址 不能为空"
+                    echo "❌ 机场导航网址 不能为空"
                 fi
             fi
             ;;
