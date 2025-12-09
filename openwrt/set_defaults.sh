@@ -94,7 +94,7 @@ get_best_node() {
 
     if [ -z "$BEST" ]; then
         echo -e "${YELLOW}未找到可用入口，尝试使用上次保存的 BACKEND_URL${NC}"
-        BEST=$(get_config BACKEND_URL)
+        BEST=$(get_config JC_URL)
         [ -z "$BEST" ] && error_exit "没有可用入口，也没有保存的后端地址"
     fi
 
