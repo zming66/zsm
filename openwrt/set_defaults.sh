@@ -72,10 +72,9 @@ set_config() {
 get_best_node() {
     NAV_URL=$(get_config NAV_URL)
 
-    # 未设置则使用默认值
     if [ -z "$NAV_URL" ]; then
-        NAV_URL="https://hongxingyun.help"
-        set_config NAV_URL "$NAV_URL"
+        echo "错误：未设置 NAV_URL，请设置导航页！"
+        exit 1
     fi
 
     echo -e "${CYAN}正在解析导航页: $NAV_URL...${NC}"
