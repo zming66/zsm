@@ -3,6 +3,7 @@
 DEFAULTS_FILE="/etc/sing-box/defaults.conf"
 MANUAL_FILE="/etc/sing-box/manual.conf"
 HEADERS_FILE="/etc/sing-box/headers.txt"
+POOL_FILE="/etc/sing-box/nodes.list"
 
 # 定义颜色
 CYAN='\033[0;36m'
@@ -69,66 +70,102 @@ set_config() {
 }
 
 # 自动选择最快节点并返回登录入口
+# 初始化池文件
+[ -f "$POOL_FILE" ] || touch "$POOL_FILE"
+
 get_best_node() {
     NAV_URL=$(get_config NAV_URL)
 
     if [ -z "$NAV_URL" ]; then
-        echo "错误：未设置 NAV_URL，请设置导航页！"
-        exit 1
+        echo "错误：未设置 NAV_URL！"
+        exit 1
     fi
 
-    echo -e "${CYAN}正在解析导航页: $NAV_URL...${NC}"
+    echo "=== 解析导航页 $NAV_URL ==="
 
-    LINKS=$(curl -s "$NAV_URL" \
-        | grep -Eo 'hongxingyun\.[a-zA-Z0-9.]+' \
-        | sed 's/^/https:\/\//' \
+    RAW_HTML=$(curl -s --max-time 5 "$NAV_URL")
+
+    # 匹配 hongxingyun.xxx（不含子域名）
+    NEW_LINKS=$(echo "$RAW_HTML" \
+        | grep -Eo 'hongxingyun\.[A-Za-z0-9.]+' \
+        | sed 's#^#https://#' \
         | sort -u)
-    BEST=""
-    BEST_LATENCY=999999
 
-    for link in $LINKS; do
-        LATENCY=$(curl -o /dev/null -s -w "%{time_starttransfer}" "$link")
-        if [ -z "$LATENCY" ]; then
-            echo "$link 不可达"
-            continue
-        fi
-        LATENCY_MS=$(awk "BEGIN {print int($LATENCY * 1000)}")
-        
-        if [ "$LATENCY_MS" -le 0 ]; then
-             echo "$link 测速失败（返回 0ms）"
-             continue
-        fi
-        
-        echo "$link 延迟: ${LATENCY_MS} ms"
+    echo "从导航页获取到："
+    echo "$NEW_LINKS"
 
-        if [ "$LATENCY_MS" -lt "$BEST_LATENCY" ]; then
-            BEST=$link
-            BEST_LATENCY=$LATENCY_MS
+    echo ">>> 测试新获取地址，并加入地址池（成功的）"
+
+    for link in $NEW_LINKS; do
+        LAT=$(curl -o /dev/null -s --max-time 3 --connect-timeout 2 -w "%{time_starttransfer}" "$link")
+        if [ -n "$LAT" ]; then
+            echo "  $link ✓ 可用"
+            grep -qx "$link" "$POOL_FILE" || echo "$link" >> "$POOL_FILE"
+        else
+            echo "  $link ✗ 不可用（不加入池）"
         fi
     done
 
+    echo ">>> 地址池内容："
+    cat "$POOL_FILE"
+    echo "---------------"
+
+    echo ">>> 从地址池中全部重新测速（失败的删除）"
+
+    BEST=""
+    BEST_LAT=999999
+
+    TMP_POOL=$(mktemp)
+
+    while read -r node; do
+        [ -z "$node" ] && continue
+
+        LAT=$(curl -o /dev/null -s --max-time 3 --connect-timeout 2 -w "%{time_starttransfer}" "$node")
+
+        if [ -z "$LAT" ]; then
+            echo "  $node ✗ 已失效，剔除"
+            continue
+        fi
+
+        LAT_MS=$(awk "BEGIN {print int($LAT * 1000)}")
+        echo "  $node 延迟: ${LAT_MS}ms"
+
+        echo "$node" >> "$TMP_POOL"
+
+        # 更新最快节点
+        if [ "$LAT_MS" -lt "$BEST_LAT" ]; then
+            BEST="$node"
+            BEST_LAT="$LAT_MS"
+        fi
+    done < "$POOL_FILE"
+
+    mv "$TMP_POOL" "$POOL_FILE"
+
     if [ -z "$BEST" ]; then
-        echo -e "${YELLOW}未找到可用入口，尝试使用上次保存的 JC_URL${NC}"
+        echo "⚠ 地址池已空，尝试使用历史 JC_URL"
         BEST=$(get_config JC_URL)
-        [ -z "$BEST" ] && error_exit "没有可用入口，也没有保存的后端地址"
+        [ -z "$BEST" ] && error_exit "没有可用入口，也没有历史 JC_URL"
+        BEST_LAT="未知"
     fi
 
-    echo -e "${GREEN}✅ 选择入口: $BEST (延迟 ${BEST_LATENCY} ms)${NC}"
+    echo "=== 最终选择入口：$BEST（$BEST_LAT ms）==="
 
-    # 写入 /etc/sing-box/defaults.conf 中 JC_URL
+    # 写入 defaults.conf
     DEFAULTS_FILE="/etc/sing-box/defaults.conf"
     tmp=$(mktemp)
+
     awk -F= -v k="JC_URL" -v v="$BEST" '
-        BEGIN{found=0}
+        BEGIN {found=0}
         $1==k {print k"="v; found=1; next}
         {print}
-        END{if(!found) print k"="v}
+        END {if(!found) print k"="v}
     ' "$DEFAULTS_FILE" > "$tmp" && mv "$tmp" "$DEFAULTS_FILE"
 
-    echo -e "${GREEN}已更新 JC_URL=$BEST 到 $DEFAULTS_FILE${NC}"
+    echo "已更新 JC_URL=$BEST"
 
     echo "$BEST"
 }
+
 # ===== 自动登录并获取订阅地址 =====
 auto_update_subscription() {
     USER=$(get_config USER)
