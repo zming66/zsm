@@ -93,6 +93,12 @@ get_best_node() {
             continue
         fi
         LATENCY_MS=$(awk "BEGIN {print int($LATENCY * 1000)}")
+        
+        if [ "$LATENCY_MS" -le 0 ]; then
+             echo "$link 测速失败（返回 0ms）"
+             continue
+        fi
+        
         echo "$link 延迟: ${LATENCY_MS} ms"
 
         if [ "$LATENCY_MS" -lt "$BEST_LATENCY" ]; then
