@@ -144,7 +144,7 @@ auto_update_subscription() {
     BASE_URL=$(get_config JC_URL)
 
     echo "尝试登录..."
-    LOGIN=$(curl -s -D headers.txt \
+    LOGIN=$(curl -s -D $HEADERS_FILE \
       -d "email=$USER&password=$PASS" \
       "$BASE_URL/hxapicc/passport/auth/login")
 
