@@ -75,30 +75,27 @@ set_config() {
 
 get_best_node() {
     NAV_URL=$(get_config NAV_URL)
+    [ -z "$NAV_URL" ] && echo "错误：未设置 NAV_URL！" && exit 1
 
-    if [ -z "$NAV_URL" ]; then
-        echo "错误：未设置 NAV_URL！"
-        exit 1
-    fi
+    echo "=== 解析导航页：$NAV_URL ==="
 
-    echo "=== 解析导航页 $NAV_URL ==="
+    RAW_HTML=$(curl -fsS --max-time 5 "$NAV_URL" 2>/dev/null)
 
-    RAW_HTML=$(curl -s --max-time 5 "$NAV_URL")
-
-    # 匹配 hongxingyun.xxx（不含子域名）
+    # 更严格提取 hongxingyun.xxx（顶级域名 2~6 字母）
     NEW_LINKS=$(echo "$RAW_HTML" \
-        | grep -Eo 'hongxingyun\.[A-Za-z0-9.]+' \
+        | grep -Eo 'hongxingyun\.[A-Za-z0-9]{2,6}' \
         | sed 's#^#https://#' \
         | sort -u)
 
-    echo "从导航页获取到："
+    echo "从导航页获得："
     echo "$NEW_LINKS"
+    echo
 
-    echo ">>> 测试新获取地址，并加入地址池（成功的）"
+    echo ">>> 测试新获取的地址"
 
     for link in $NEW_LINKS; do
-        LAT=$(curl -o /dev/null -s --max-time 3 --connect-timeout 2 -w "%{time_starttransfer}" "$link")
-        if [ -n "$LAT" ]; then
+        curl -o /dev/null -s --max-time 3 --connect-timeout 2 "$link"
+        if [ $? -eq 0 ]; then
             echo "  $link ✓ 可用"
             grep -qx "$link" "$POOL_FILE" || echo "$link" >> "$POOL_FILE"
         else
@@ -106,11 +103,12 @@ get_best_node() {
         fi
     done
 
+    echo
     echo ">>> 地址池内容："
-    cat "$POOL_FILE"
+    cat "$POOL_FILE" 2>/dev/null || echo "(空)"
     echo "---------------"
 
-    echo ">>> 从地址池中全部重新测速（失败的删除）"
+    echo ">>> 从地址池全部重新测速（失败剔除）"
 
     BEST=""
     BEST_LAT=999999
@@ -120,19 +118,21 @@ get_best_node() {
     while read -r node; do
         [ -z "$node" ] && continue
 
-        LAT=$(curl -o /dev/null -s --max-time 3 --connect-timeout 2 -w "%{time_starttransfer}" "$node")
+        # 获取延迟（捕获 exit code）
+        LAT=$(curl -o /dev/null -s --max-time 3 --connect-timeout 2 \
+               -w "%{time_starttransfer}" "$node")
+        RET=$?
 
-        if [ -z "$LAT" ]; then
+        if [ $RET -ne 0 ]; then
             echo "  $node ✗ 已失效，剔除"
             continue
         fi
 
         LAT_MS=$(awk "BEGIN {print int($LAT * 1000)}")
-        echo "  $node 延迟: ${LAT_MS}ms"
+        echo "  $node 延迟：${LAT_MS}ms"
 
         echo "$node" >> "$TMP_POOL"
 
-        # 更新最快节点
         if [ "$LAT_MS" -lt "$BEST_LAT" ]; then
             BEST="$node"
             BEST_LAT="$LAT_MS"
@@ -148,9 +148,9 @@ get_best_node() {
         BEST_LAT="未知"
     fi
 
-    echo "=== 最终选择入口：$BEST（$BEST_LAT ms）==="
+    echo "=== 最终选择入口：$BEST（${BEST_LAT}ms）==="
 
-    # 写入 defaults.conf
+    # 更新 defaults.conf
     DEFAULTS_FILE="/etc/sing-box/defaults.conf"
     tmp=$(mktemp)
 
@@ -162,7 +162,6 @@ get_best_node() {
     ' "$DEFAULTS_FILE" > "$tmp" && mv "$tmp" "$DEFAULTS_FILE"
 
     echo "已更新 JC_URL=$BEST"
-
     echo "$BEST"
 }
 
